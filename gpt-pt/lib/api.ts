@@ -1,6 +1,11 @@
-import axios from 'axios';
+import { supabase } from "./supabase";
 
-export const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_BASE || 'http://127.0.0.1:3000',
-  timeout: 15000,
-});
+export async function authedFetch(path: string, init?: RequestInit) {
+  const { data } = await supabase.auth.getSession();
+  const jwt = data.session?.access_token;
+  const headers = new Headers(init?.headers || {});
+  headers.set("Content-Type", "application/json");
+  if (jwt) headers.set("Authorization", `Bearer ${jwt}`);
+  const base = process.env.EXPO_PUBLIC_API_BASE!;
+  return fetch(`${base}${path}`, { ...init, headers });
+}
