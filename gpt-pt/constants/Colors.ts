@@ -6,21 +6,16 @@
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+// theme/colors.ts
+export const colors = {
+  background: "#0D0D0D",
+  textPrimary: "#FFFFFF",
+  textSecondary: "#A0A0A0",
+  accent: "#B7FF4A", // your neon green
+  buttonBg: "#B7FF4A",
+  buttonText: "#0D0D0D",
+  inputBg: "#1A1A1A",
+  inputBorder: "#2A2A2A",
+  error: "#FF4A4A",
 };
+

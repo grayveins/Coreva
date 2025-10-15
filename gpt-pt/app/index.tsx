@@ -1,3 +1,4 @@
+// app/index.tsx
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
 import { supabase } from "../lib/supabase";
@@ -7,10 +8,10 @@ export default function Index() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setDest(data.session ? "/(tabs)" : "/sign-in");
+      setDest(data.session ? "/(app)/(tabs)" : "/welcome");
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setDest(session ? "/(tabs)" : "/sign-in");
+      setDest(session ? "/(app)/(tabs)" : "/welcome");
     });
     return () => sub.subscription.unsubscribe();
   }, []);
