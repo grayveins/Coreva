@@ -1,22 +1,23 @@
 // app/(app)/_layout.tsx
+import React from "react";
 import { Drawer } from "expo-router/drawer";
-import { View, TouchableOpacity, Text, SafeAreaView, Platform } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  SafeAreaView,
+  Platform,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
-
-const COLORS = {
-  headerBg: "#4A5568",
-  screenBg: "#F7FAFC",
-  border: "#E2E8F0",
-  textDark: "#2D3748",
-  textSub: "#718096",
-};
+import { colors } from "../../constants/Colors";
 
 function CustomHeader() {
   const navigation = useNavigation();
+
   return (
-    <SafeAreaView style={{ backgroundColor: COLORS.headerBg }}>
+    <SafeAreaView style={{ backgroundColor: colors.background }}>
       <View
         style={{
           flexDirection: "row",
@@ -24,18 +25,29 @@ function CustomHeader() {
           alignItems: "center",
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: COLORS.headerBg,
+          backgroundColor: colors.background,
           paddingTop: Platform.OS === "ios" ? 0 : 12,
         }}
       >
-        <TouchableOpacity onPress={() => navigation.dispatch({ type: "OPEN_DRAWER" })}>
-          <Ionicons name="menu" size={28} color="white" />
+        {/* Menu Button */}
+        <TouchableOpacity
+          onPress={() => navigation.dispatch({ type: "OPEN_DRAWER" })}
+        >
+          <Ionicons name="menu" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
 
-        <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
+        {/* Title */}
+        <Text
+          style={{
+            color: colors.textPrimary,
+            fontSize: 18,
+            fontWeight: "bold",
+          }}
+        >
           GPT Personal Training
         </Text>
 
+        {/* Spacer to balance layout */}
         <View style={{ width: 28 }} />
       </View>
     </SafeAreaView>
@@ -44,65 +56,106 @@ function CustomHeader() {
 
 function CustomDrawerContent(props: any) {
   const onSignOut = async () => {
-    await supabase.auth.signOut();
-    props.navigation.closeDrawer?.();
-    router.replace("/sign-in"); // bounce out of the authenticated area
+    try {
+      await supabase.auth.signOut();
+      props.navigation.closeDrawer?.();
+      router.replace("/sign-in");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.screenBg }}>
-      {/* Mini profile / actions */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* User Profile */}
       <View
         style={{
           padding: 20,
           borderBottomWidth: 1,
-          borderBottomColor: COLORS.border,
-          backgroundColor: "#EDF2F7",
+          borderBottomColor: colors.inputBorder,
+          backgroundColor: colors.card,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-          <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "#A0AEC0", marginRight: 12 }} />
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <View
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: colors.textSecondary,
+              marginRight: 12,
+            }}
+          />
           <View>
-            <Text style={{ color: COLORS.textDark, fontSize: 16, fontWeight: "700" }}>User</Text>
-            <Text style={{ color: COLORS.textSub, fontSize: 13 }}>example@domain.com</Text>
+            <Text
+              style={{
+                color: colors.textPrimary,
+                fontSize: 16,
+                fontWeight: "700",
+              }}
+            >
+              User
+            </Text>
+            <Text
+              style={{
+                color: colors.textSecondary,
+                fontSize: 13,
+              }}
+            >
+              example@domain.com
+            </Text>
           </View>
         </View>
 
+        {/* Sign Out Button */}
         <TouchableOpacity
           onPress={onSignOut}
           style={{
             borderWidth: 1,
-            borderColor: COLORS.headerBg,
+            borderColor: colors.accent,
             borderRadius: 10,
             paddingVertical: 10,
             alignItems: "center",
           }}
         >
-          <Text style={{ color: COLORS.headerBg, fontWeight: "700" }}>Sign Out</Text>
+          <Text style={{ color: colors.accent, fontWeight: "700" }}>
+            Sign Out
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Add drawer links later if you want */}
+      {/* Add drawer links below if needed */}
     </SafeAreaView>
   );
 }
 
 export default function AuthenticatedLayout() {
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.screenBg }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Drawer
         screenOptions={{
           header: () => <CustomHeader />,
-          drawerStyle: { backgroundColor: COLORS.screenBg, width: 300 },
-          drawerActiveTintColor: COLORS.textDark,
-          drawerInactiveTintColor: COLORS.textSub,
+          drawerStyle: {
+            backgroundColor: colors.background,
+            width: 300,
+          },
+          drawerActiveTintColor: colors.accent,
+          drawerInactiveTintColor: colors.textSecondary,
         }}
         drawerContent={(props) => <CustomDrawerContent {...props} />}
       >
-        {/* Expose the TABS group inside the drawer */}
+        {/* Tabs are nested inside drawer */}
         <Drawer.Screen
           name="(tabs)"
-          options={{ title: "Home" }}
+          options={{
+            title: "Home",
+          }}
         />
       </Drawer>
     </View>

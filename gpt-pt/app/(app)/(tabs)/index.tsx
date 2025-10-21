@@ -1,278 +1,285 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { AnimatedCircularProgress } from "react-native-circular-progress";
+import { colors } from "@/constants/Colors";
+import { supabase } from "@/lib/supabase";
 
 export default function HomeScreen() {
-  const [activeTab, setActiveTab] = useState("workouts");
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const calories = 1021;
+  const goal = 2700;
+  const percent = (calories / goal) * 100;
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setLoading(true);
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error("No user found:", userError);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+      } else {
+        setProfileName(data?.name || "User");
+      }
+
+      setLoading(false);
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Profile with larger picture */}
-      <View style={styles.profileSection}>
-        <View style={styles.profileCircle} />
-        <Text style={styles.name}>Gavin Cruz</Text>
-      </View>
+    <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Greeting */}
+        <View style={styles.greetingRow}>
+          <Ionicons name="person-circle-outline" size={36} color={colors.accent} />
+          <Text style={styles.greeting}>Hi, {profileName}</Text>
+        </View>
 
-      {/* Quick actions */}
-      <View style={styles.quickActions}>
-        <Pressable style={styles.actionBtn}>
-          <Text style={styles.actionText}>⚡ Adaptive Coach</Text>
-        </Pressable>
-        <Pressable style={styles.actionBtn}>
-          <Text style={styles.actionText}>📊 Progress Dashboard</Text>
-        </Pressable>
-        <Pressable style={styles.actionBtn}>
-          <Text style={styles.actionText}>🍎 Meal Log</Text>
-        </Pressable>
-      </View>
-
-      {/* Tabs (Workouts / Macros) */}
-      <View style={styles.tabRow}>
-        <Pressable 
-          style={[styles.tab, activeTab === "workouts" && styles.activeTab]} 
-          onPress={() => setActiveTab("workouts")}
-        >
-          <Text style={[styles.tabText, activeTab === "workouts" && styles.activeTabText]}>Workouts</Text>
-        </Pressable>
-        <Pressable 
-          style={[styles.tab, activeTab === "macros" && styles.activeTab]} 
-          onPress={() => setActiveTab("macros")}
-        >
-          <Text style={[styles.tabText, activeTab === "macros" && styles.activeTabText]}>Macros</Text>
-        </Pressable>
-      </View>
-
-      {/* Content */}
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        {activeTab === "macros" ? (
-          <>
-            <View style={styles.macroRow}>
-              <Text style={styles.macroLabel}>Calories: 0.0 kcal</Text>
-              <Text style={styles.goalText}>Goal: 2,289 kcal</Text>
-            </View>
-            <View style={styles.macroRow}>
-              <Text style={styles.macroLabel}>Protein: 0.0 g</Text>
-              <Text style={styles.goalText}>Goal: 171.0 g</Text>
-            </View>
-            <View style={styles.macroRow}>
-              <Text style={styles.macroLabel}>Carb: 0.0 g</Text>
-              <Text style={styles.goalText}>Goal: 114.0 g</Text>
-            </View>
-            <View style={{ ...styles.macroRow, borderBottomWidth: 0 }}>
-              <Text style={styles.macroLabel}>Fats: 0.0 g</Text>
-              <Text style={styles.goalText}>Goal: 85.0 g</Text>
-            </View>
-          </>
-        ) : (
-          <View style={styles.workoutContent}>
-            <Text style={styles.workoutTitle}>Today's Workout</Text>
-            <View style={styles.workoutCard}>
-              <Text style={styles.workoutName}>Upper Body Strength</Text>
-              <Text style={styles.workoutDetail}>4 exercises • 45 minutes</Text>
-              <Pressable style={styles.startButton}>
-                <Text style={styles.startButtonText}>Start Workout</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.sectionTitle}>Recent Workouts</Text>
-            <View style={styles.recentWorkout}>
-              <Text style={styles.recentWorkoutName}>Lower Body</Text>
-              <Text style={styles.recentWorkoutDate}>Completed yesterday</Text>
-            </View>
-            <View style={styles.recentWorkout}>
-              <Text style={styles.recentWorkoutName}>Cardio</Text>
-              <Text style={styles.recentWorkoutDate}>Completed 2 days ago</Text>
-            </View>
+        {/* Food Log Section */}
+        <Text style={styles.sectionTitle}>Food Log</Text>
+        <View style={styles.foodCard}>
+          <View style={styles.ringContainer}>
+            <AnimatedCircularProgress
+              size={120}
+              width={10}
+              fill={percent}
+              tintColor={colors.accent}
+              backgroundColor="#2A2A2A"
+              rotation={0}
+              lineCap="round"
+            >
+              {() => (
+                <View style={{ alignItems: "center" }}>
+                  <Text style={styles.kcalText}>{calories}</Text>
+                  <Text style={styles.kcalGoal}>/{goal} kcal</Text>
+                  <Text style={styles.remainingText}>
+                    {goal - calories} Remaining
+                  </Text>
+                </View>
+              )}
+            </AnimatedCircularProgress>
           </View>
-        )}
+
+          <View style={styles.macroInfo}>
+            <MacroBar label="Protein" current={202} goal={229} color="#4DA3FF" />
+            <MacroBar label="Carb" current={202} goal={229} color="#B44DFF" />
+            <MacroBar label="Fat" current={202} goal={229} color="#FFD24D" />
+          </View>
+        </View>
+
+        {/* Workouts Section */}
+        <Text style={styles.sectionTitle}>Today’s Workouts</Text>
+        <View style={styles.workoutCard}>
+          <Text style={styles.workoutHeader}>Full Body Workout</Text>
+          <View style={styles.workoutTags}>
+            <Tag text="Back" />
+            <Tag text="Chest" />
+            <Tag text="Arms" />
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <WorkoutBox title="Barbell Bent Over Row" sets="3 Sets" />
+            <WorkoutBox title="Triceps Rope Pressdown" sets="3 Sets" />
+            <WorkoutBox title="Shoulder Press" sets="3 Sets" />
+          </ScrollView>
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
+// --- Subcomponents --- //
+
+const MacroBar = ({ label, current, goal, color }: any) => {
+  const width = (current / goal) * 100;
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <View style={styles.macroRow}>
+        <Text style={styles.macroLabel}>{label}</Text>
+        <Text style={styles.macroGoal}>
+          {current}/{goal}g Goal
+        </Text>
+      </View>
+      <View style={styles.macroBarBg}>
+        <View style={[styles.macroBarFill, { width: `${width}%`, backgroundColor: color }]} />
+      </View>
+    </View>
+  );
+};
+
+const Tag = ({ text }: any) => (
+  <View style={styles.tag}>
+    <Text style={styles.tagText}>{text}</Text>
+  </View>
+);
+
+const WorkoutBox = ({ title, sets }: any) => (
+  <View style={styles.workoutBox}>
+    <Text style={styles.workoutName}>{title}</Text>
+    <Text style={styles.workoutSets}>{sets}</Text>
+  </View>
+);
+
+// --- Styles --- //
+
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#F7FAFC",
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-
-  // Profile with larger picture
-  profileSection: {
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 80,
+  },
+  greetingRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  profileCircle: {
-    width: 100, // Increased from 80
-    height: 100, // Increased from 80
-    borderRadius: 50, // Increased from 40
-    backgroundColor: "#A0AEC0",
-    marginBottom: 8,
+  greeting: {
+    color: colors.textPrimary,
+    fontSize: 28,
+    fontWeight: "700",
+    marginLeft: 6,
   },
-  name: {
+  sectionTitle: {
+    color: colors.textPrimary,
     fontSize: 18,
-    fontWeight: "600",
-    color: "#2D3748",
+    fontWeight: "700",
+    marginVertical: 16,
   },
-
-  // Quick actions
-  quickActions: {
+  foodCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    marginBottom: 20,
-  },
-  actionBtn: {
-    backgroundColor: "#EDF2F7",
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    flex: 1,
-    marginHorizontal: 6,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
-  actionText: {
-    color: "#4A5568",
-    fontSize: 12,
-    fontWeight: "600",
+  ringContainer: {
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  // Tabs
-  tabRow: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    paddingHorizontal: 16,
-    marginBottom: 20,
-  },
-  tab: {
-    backgroundColor: "#E2E8F0",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#CBD5E0",
-  },
-  activeTab: {
-    backgroundColor: "#4A5568",
-    borderColor: "#4A5568",
-  },
-  tabText: {
-    color: "#718096",
-    fontWeight: "600",
-  },
-  activeTabText: {
-    color: "white",
+  kcalText: {
+    color: colors.textPrimary,
+    fontSize: 20,
     fontWeight: "700",
   },
-
-  // Content
-  scroll: { flex: 1 },
-  scrollContent: { 
-    paddingHorizontal: 16, 
-    paddingBottom: 16,
-    paddingTop: 10,
+  kcalGoal: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  remainingText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  macroInfo: {
+    flex: 1,
+    marginLeft: 16,
   },
   macroRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    backgroundColor: "white",
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
   },
-  macroLabel: { color: "#2D3748", fontSize: 14, fontWeight: "500" },
-  goalText: { color: "#718096", fontSize: 14 },
-  
-  // Workout Content
-  workoutContent: {
-    paddingTop: 10,
+  macroLabel: {
+    color: colors.textPrimary,
+    fontSize: 14,
   },
-  workoutTitle: {
-    color: "#2D3748",
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 16,
+  macroGoal: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  macroBarBg: {
+    height: 6,
+    backgroundColor: "#2A2A2A",
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  macroBarFill: {
+    height: 6,
+    borderRadius: 6,
   },
   workoutCard: {
-    backgroundColor: "white",
-    borderRadius: 12,
+    backgroundColor: colors.card,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    marginBottom: 20,
   },
-  workoutName: {
-    color: "#2D3748",
+  workoutHeader: {
+    color: colors.textPrimary,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 8,
   },
-  workoutDetail: {
-    color: "#718096",
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  startButton: {
-    backgroundColor: "#4A5568",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  startButtonText: {
-    color: "white",
-    fontWeight: "600",
-  },
-  sectionTitle: {
-    color: "#2D3748",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  recentWorkout: {
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 16,
+  workoutTags: {
+    flexDirection: "row",
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
   },
-  recentWorkoutName: {
-    color: "#2D3748",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 4,
+  tag: {
+    backgroundColor: "#2A2A2A",
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginRight: 8,
   },
-  recentWorkoutDate: {
-    color: "#718096",
+  tagText: {
+    color: colors.accent,
     fontSize: 12,
+    fontWeight: "600",
+  },
+  workoutBox: {
+    backgroundColor: "#2A2A2A",
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 10,
+    width: 150,
+  },
+  workoutName: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  workoutSets: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 4,
   },
 });

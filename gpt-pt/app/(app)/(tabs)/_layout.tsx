@@ -1,6 +1,8 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../../../constants/Colors";
+import { Platform } from "react-native";
 
 export default function TabLayout() {
   return (
@@ -8,75 +10,74 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#4A5568",
-          borderTopColor: "#2D3748",
-          height: 60,
+          backgroundColor: colors.background,
+          borderTopColor: colors.inputBorder,
+          height: Platform.OS === "ios" ? 85 : 70, // taller for iOS safe area
+          paddingBottom: Platform.OS === "ios" ? 20 : 10, // lift up icons
+          paddingTop: 6,
         },
-        tabBarActiveTintColor: "#FFFFFF",
-        tabBarInactiveTintColor: "#CBD5E0",
-        tabBarLabelStyle: { fontSize: 12, fontWeight: "600", marginBottom: 4 },
-        tabBarItemStyle: { paddingVertical: 6 },
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          justifyContent: "center",
+          alignItems: "center",
+        },
       }}
     >
-      {/* Dashboard (index.tsx) */}
+      {/* Dashboard */}
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name="home"
-              size={22}
+              size={24}
               color={color}
-              style={{ marginBottom: -2, transform: [{ scale: focused ? 1.1 : 1 }] }}
+              style={{
+                transform: [{ scale: focused ? 1.1 : 1 }],
+              }}
             />
           ),
         }}
       />
 
-      {/* Meal Log (food-log.tsx) */}
+      {/* Meal Log */}
       <Tabs.Screen
         name="food-log"
         options={{
           title: "Meal",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name="restaurant"
-              size={22}
+              name="fast-food"
+              size={24}
               color={color}
-              style={{ marginBottom: -2, transform: [{ scale: focused ? 1.1 : 1 }] }}
+              style={{
+                transform: [{ scale: focused ? 1.1 : 1 }],
+              }}
             />
           ),
         }}
       />
 
-      {/* Workout tab — point this to workout.tsx or workout-log.tsx (pick one) */}
+      {/* Workout */}
       <Tabs.Screen
-        name="workout"  // <-- if your file is workout-log.tsx, change this to "workout-log"
+        name="workout"
         options={{
           title: "Workout",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name="barbell"
-              size={22}
+              size={24}
               color={color}
-              style={{ marginBottom: -2, transform: [{ scale: focused ? 1.1 : 1 }] }}
-            />
-          ),
-        }}
-      />
-
-      {/* Chat tab (chat.tsx) */}
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: "Chat",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name="chatbubble-ellipses"
-              size={22}
-              color={color}
-              style={{ marginBottom: -2, transform: [{ scale: focused ? 1.1 : 1 }] }}
+              style={{
+                transform: [{ scale: focused ? 1.1 : 1 }],
+              }}
             />
           ),
         }}

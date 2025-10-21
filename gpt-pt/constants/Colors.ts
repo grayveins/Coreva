@@ -17,5 +17,6 @@ export const colors = {
   inputBg: "#1A1A1A",
   inputBorder: "#2A2A2A",
   error: "#FF4A4A",
+  card: "#1C1C1E", // dark gray for those small panels
 };
 

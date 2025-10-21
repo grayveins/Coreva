@@ -1,26 +1,36 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import { supabase } from "../lib/supabase";
 import { router } from "expo-router";
 import { colors } from "../constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSignUp = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
-    setLoading(false);
+  // Password conditions
+  const isLengthValid = password.length >= 8;
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    if (error) return Alert.alert("Sign up error", error.message);
+  const onNext = () => {
+    if (!email || !password) {
+      return Alert.alert("Missing info", "Please enter both email and password.");
+    }
 
-    Alert.alert(
-      "Account created",
-      "Please check your inbox to confirm your email."
-    );
-    router.replace("/sign-in");
+    if (!isLengthValid || !hasSpecialChar) {
+      return Alert.alert(
+        "Weak password",
+        "Password must be at least 8 characters long and contain a special character."
+      );
+    }
+
+    // ✅ Instead of creating account now, we move to onboarding
+    // We'll create the account AFTER onboarding completion
+    router.push({
+      pathname: "/onboarding/start",
+      params: { email, password },
+    });
   };
 
   return (
@@ -32,12 +42,21 @@ export default function SignUp() {
         padding: 24,
       }}
     >
+      {/* 🔙 Back button */}
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={{ position: "absolute", top: 60, left: 24 }}
+      >
+        <Ionicons name="chevron-back" size={26} color={colors.textPrimary} />
+      </TouchableOpacity>
+
       <Text
         style={{
           color: colors.textPrimary,
           fontSize: 28,
           fontWeight: "700",
           marginBottom: 8,
+          textAlign: "center",
         }}
       >
         Create your account
@@ -48,13 +67,15 @@ export default function SignUp() {
           color: colors.textSecondary,
           marginBottom: 24,
           fontSize: 15,
+          textAlign: "center",
         }}
       >
         Start your Coreva fitness journey today.
       </Text>
 
+      {/* Email Input */}
       <TextInput
-        placeholder="Email"
+        placeholder="Enter your email address"
         placeholderTextColor={colors.textSecondary}
         value={email}
         onChangeText={setEmail}
@@ -71,8 +92,9 @@ export default function SignUp() {
         }}
       />
 
+      {/* Password Input */}
       <TextInput
-        placeholder="Password"
+        placeholder="Enter your password"
         placeholderTextColor={colors.textSecondary}
         value={password}
         onChangeText={setPassword}
@@ -84,13 +106,37 @@ export default function SignUp() {
           padding: 14,
           borderWidth: 1,
           borderColor: colors.inputBorder,
-          marginBottom: 20,
+          marginBottom: 10,
         }}
       />
 
+      {/* ✅ Password Requirements */}
+      <View style={{ marginBottom: 24 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+          <Ionicons
+            name={isLengthValid ? "checkmark-circle" : "ellipse-outline"}
+            size={18}
+            color={isLengthValid ? "limegreen" : colors.textSecondary}
+            style={{ marginRight: 6 }}
+          />
+          <Text style={{ color: colors.textSecondary }}>Must be at least 8 characters</Text>
+        </View>
+
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Ionicons
+            name={hasSpecialChar ? "checkmark-circle" : "ellipse-outline"}
+            size={18}
+            color={hasSpecialChar ? "limegreen" : colors.textSecondary}
+            style={{ marginRight: 6 }}
+          />
+          <Text style={{ color: colors.textSecondary }}>Must contain one special character</Text>
+        </View>
+      </View>
+
+      {/* Next button */}
       <TouchableOpacity
         disabled={loading}
-        onPress={onSignUp}
+        onPress={onNext}
         style={{
           backgroundColor: colors.buttonBg,
           opacity: loading ? 0.7 : 1,
@@ -106,7 +152,7 @@ export default function SignUp() {
             fontSize: 16,
           }}
         >
-          {loading ? "Creating…" : "Sign up"}
+          Next
         </Text>
       </TouchableOpacity>
 
