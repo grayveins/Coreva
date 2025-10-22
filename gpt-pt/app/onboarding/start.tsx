@@ -20,15 +20,15 @@ export default function OnboardingStart() {
   const password = Array.isArray(params.password) ? params.password[0] : params.password || "";
 
   const { updateForm } = useOnboarding();
-  const [firstName, setFirstName] = useState("");
+  const [name, setName] = useState("");
 
   const onNext = () => {
-    if (!firstName) {
+    if (!name) {
       Alert.alert("Missing info", "Please enter your name.");
       return;
     }
 
-    updateForm({ firstName, email, password });
+    updateForm({ name, email, password });
     router.push("/onboarding/gender");
   };
 
@@ -51,8 +51,8 @@ export default function OnboardingStart() {
           <TextInput
             placeholder="Tap anywhere to start typing"
             placeholderTextColor={colors.textSecondary}
-            value={firstName}
-            onChangeText={setFirstName}
+            value={name}
+            onChangeText={setName}
             style={{
               backgroundColor: colors.inputBg,
               color: colors.textPrimary,

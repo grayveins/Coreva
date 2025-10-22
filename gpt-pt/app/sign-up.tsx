@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { router } from "expo-router";
 import { colors } from "../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import { supabase } from "../lib/supabase";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -13,25 +14,19 @@ export default function SignUp() {
   const isLengthValid = password.length >= 8;
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-  const onNext = () => {
-    if (!email || !password) {
-      return Alert.alert("Missing info", "Please enter both email and password.");
-    }
+  // SignUp.tsx
+  const onSignUp = async () => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return Alert.alert("Sign up error", error.message);
 
-    if (!isLengthValid || !hasSpecialChar) {
-      return Alert.alert(
-        "Weak password",
-        "Password must be at least 8 characters long and contain a special character."
-      );
-    }
-
-    // ✅ Instead of creating account now, we move to onboarding
-    // We'll create the account AFTER onboarding completion
-    router.push({
-      pathname: "/onboarding/start",
-      params: { email, password },
-    });
+    Alert.alert(
+      "Check your email",
+      "A confirmation email has been sent. Please verify your email to continue."
+    );
+    
+    router.replace("/sign-in");
   };
+
 
   return (
     <View
@@ -133,15 +128,16 @@ export default function SignUp() {
         </View>
       </View>
 
-      {/* Next button */}
+      {/* ✅ Complete button */}
       <TouchableOpacity
         disabled={loading}
-        onPress={onNext}
+        onPress={onSignUp}
         style={{
           backgroundColor: colors.buttonBg,
-          opacity: loading ? 0.7 : 1,
-          borderRadius: 12,
-          padding: 14,
+          borderRadius: 50,
+          padding: 16,
+          opacity: loading ? 0.6 : 1,
+          marginBottom: 40,
         }}
       >
         <Text
@@ -152,7 +148,7 @@ export default function SignUp() {
             fontSize: 16,
           }}
         >
-          Next
+          {loading ? "Creating Account..." : "Sign Up"}
         </Text>
       </TouchableOpacity>
 

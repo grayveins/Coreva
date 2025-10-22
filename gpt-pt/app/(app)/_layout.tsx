@@ -1,5 +1,5 @@
 // app/(app)/_layout.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Drawer } from "expo-router/drawer";
 import {
   View,
@@ -7,6 +7,7 @@ import {
   Text,
   SafeAreaView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, router } from "expo-router";
@@ -55,6 +56,38 @@ function CustomHeader() {
 }
 
 function CustomDrawerContent(props: any) {
+  const [profileName, setProfileName] = useState<string>("User");
+  const [email, setEmail] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoading(true);
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error("Error fetching user:", userError);
+        setLoading(false);
+        return;
+      }
+
+      setEmail(user.email || "");
+
+      // Fetch name from profiles if available
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.name) setProfileName(profile.name);
+
+      setLoading(false);
+    };
+
+    fetchUserData();
+  }, []);
+
   const onSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -64,6 +97,16 @@ function CustomDrawerContent(props: any) {
       console.error("Error signing out:", error);
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color={colors.accent} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -100,7 +143,7 @@ function CustomDrawerContent(props: any) {
                 fontWeight: "700",
               }}
             >
-              User
+              {profileName}
             </Text>
             <Text
               style={{
@@ -108,7 +151,7 @@ function CustomDrawerContent(props: any) {
                 fontSize: 13,
               }}
             >
-              example@domain.com
+              {email}
             </Text>
           </View>
         </View>

@@ -11,11 +11,66 @@ export default function SignIn() {
 
   const onLogin = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
 
-    if (error) return Alert.alert("Login error", error.message);
-    router.replace("/(app)/(tabs)");
+    try {
+      // 1️⃣ Sign in the user
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        Alert.alert("Login error", signInError.message);
+        return;
+      }
+
+      const userId = signInData.user?.id;
+      if (!userId) {
+        Alert.alert("Error", "User not found after login.");
+        return;
+      }
+
+      // 2️⃣ Check if profile exists
+      let { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      // 3️⃣ If profile does not exist, create minimal profile
+      if (profileError && profileError.code === "PGRST116") {
+        const { data: newProfile, error: insertError } = await supabase.from("profiles").insert([
+          {
+            id: userId,
+            onboarding_complete: false,
+            created_at: new Date(),
+          },
+        ]).select().single();
+
+        if (insertError) {
+          Alert.alert("Error creating profile", insertError.message);
+          return;
+        }
+
+        profile = newProfile; // use the newly created profile
+      } else if (profileError) {
+        // Other errors
+        Alert.alert("Error fetching profile", profileError.message);
+        return;
+      }
+
+      // 4️⃣ Redirect based on onboarding status
+      const onboardingComplete = profile?.onboarding_complete ?? false;
+      if (!onboardingComplete) {
+        router.replace("/onboarding/start");
+      } else {
+        router.replace("/(app)/(tabs)");
+      }
+    } catch (e: any) {
+      Alert.alert("Login failed", e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

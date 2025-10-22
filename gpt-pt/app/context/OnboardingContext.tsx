@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export type OnboardingForm = {
-  firstName?: string;
+  name?: string;
   email?: string;
   password?: string;
   gender?: string;
