@@ -40,12 +40,12 @@ function CustomHeader() {
         {/* Title */}
         <Text
           style={{
-            color: colors.textPrimary,
+            color: colors.accent,
             fontSize: 18,
             fontWeight: "bold",
           }}
         >
-          GPT Personal Training
+          Coreva
         </Text>
 
         {/* Spacer to balance layout */}

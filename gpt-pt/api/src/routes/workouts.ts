@@ -1,55 +1,36 @@
-import { FastifyPluginAsync } from "fastify";
+import { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { pg } from "../db";
+import { supabase } from "../lib/supabase";
 
-const CreateWorkout = z.object({ name: z.string().min(1), note: z.string().optional() });
-const CreateWorkoutLog = z.object({
-  workout_id: z.number().optional(),
-  date: z.string().optional(), // YYYY-MM-DD
-  exercise: z.string().min(1),
-  sets: z.number().optional(),
-  reps: z.number().optional(),
-  weight: z.number().optional(),
-  note: z.string().optional()
+const InsertWorkoutLog = z.object({
+  user_id: z.string().uuid(),
+  note: z.string().min(1),
+  day: z.number().int().min(1).max(7),
 });
 
-const routes: FastifyPluginAsync = async (app) => {
-  app.get("/", async (req, reply) => {
-    const { user_id } = (req as any).auth;
-    const { rows } = await pg("select * from public.workouts where user_id=$1 order by created_at desc", [user_id]);
-    reply.send(rows);
+export default async function workoutsRoutes(app: FastifyInstance) {
+  app.get("/workout-logs", async (req) => {
+    const { user_id } = (req.query ?? {}) as { user_id?: string };
+    if (!user_id) return { data: [], error: "user_id required" };
+
+    const { data, error } = await supabase
+      .from("workout_logs")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return { data };
   });
 
-  app.post("/", async (req, reply) => {
-    const { user_id } = (req as any).auth;
-    const b = CreateWorkout.parse(req.body);
-    const { rows } = await pg(
-      "insert into public.workouts(user_id,name,note) values($1,$2,$3) returning *",
-      [user_id, b.name, b.note ?? null]
-    );
-    reply.send(rows[0]);
+  app.post("/workout-logs", async (req) => {
+    const parsed = InsertWorkoutLog.parse(req.body);
+    const { data, error } = await supabase
+      .from("workout_logs")
+      .insert(parsed)
+      .select()
+      .single();
+    if (error) throw error;
+    return { data };
   });
-
-  app.get("/logs", async (req, reply) => {
-    const { user_id } = (req as any).auth;
-    const { rows } = await pg(
-      "select * from public.workout_logs where user_id=$1 order by date desc, created_at desc limit 100",
-      [user_id]
-    );
-    reply.send(rows);
-  });
-
-  app.post("/logs", async (req, reply) => {
-    const { user_id } = (req as any).auth;
-    const b = CreateWorkoutLog.parse(req.body);
-    const { rows } = await pg(
-      `insert into public.workout_logs(user_id, workout_id, date, exercise, sets, reps, weight, note)
-       values ($1,$2, coalesce($3::date, current_date), $4,$5,$6,$7,$8)
-       returning *`,
-      [user_id, b.workout_id ?? null, b.date ?? null, b.exercise, b.sets ?? null, b.reps ?? null, b.weight ?? null, b.note ?? null]
-    );
-    reply.send(rows[0]);
-  });
-};
-
-export default routes;
+}
