@@ -12,8 +12,8 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.inputBorder,
-          height: Platform.OS === "ios" ? 85 : 70, // taller for iOS safe area
-          paddingBottom: Platform.OS === "ios" ? 20 : 10, // lift up icons
+          height: Platform.OS === "ios" ? 85 : 70,
+          paddingBottom: Platform.OS === "ios" ? 20 : 10,
           paddingTop: 6,
         },
         tabBarActiveTintColor: colors.accent,
@@ -39,9 +39,7 @@ export default function TabLayout() {
               name="home"
               size={24}
               color={color}
-              style={{
-                transform: [{ scale: focused ? 1.1 : 1 }],
-              }}
+              style={{ transform: [{ scale: focused ? 1.1 : 1 }] }}
             />
           ),
         }}
@@ -57,9 +55,7 @@ export default function TabLayout() {
               name="fast-food"
               size={24}
               color={color}
-              style={{
-                transform: [{ scale: focused ? 1.1 : 1 }],
-              }}
+              style={{ transform: [{ scale: focused ? 1.1 : 1 }] }}
             />
           ),
         }}
@@ -73,6 +69,22 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name="barbell"
+              size={24}
+              color={color}
+              style={{ transform: [{ scale: focused ? 1.1 : 1 }] }}
+            />
+          ),
+        }}
+      />
+
+      {/* 💬 Chat */}
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Coach",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name="chatbubble-ellipses"
               size={24}
               color={color}
               style={{

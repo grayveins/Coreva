@@ -11,19 +11,21 @@ import {
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { authedFetch } from "../../../lib/api";
+import { Ionicons } from "@expo/vector-icons";
+
+const colors = {
+  background: "#0D0D0D",
+  textPrimary: "#FFFFFF",
+  textSecondary: "#A0A0A0",
+  accent: "#B7FF4A",
+  buttonBg: "#B7FF4A",
+  buttonText: "#0D0D0D",
+  inputBg: "#1A1A1A",
+  inputBorder: "#2A2A2A",
+  card: "#1C1C1E",
+};
 
 type Msg = { role: "user" | "assistant"; content: string };
-
-const C = {
-  bg: "#F7FAFC",
-  cardAI: "#EDF2F7",
-  cardUser: "#4A5568",
-  textDark: "#1A202C",
-  textSub: "#4A5568",
-  textOnAccent: "#FFFFFF",
-  inputBg: "#FFFFFF",
-  border: "#E2E8F0",
-};
 
 export default function Chat() {
   const [messages, setMessages] = useState<Msg[]>([
@@ -33,7 +35,7 @@ export default function Chat() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
-  // Redirect if not logged in + load history
+  // Auth check + load chat history
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
@@ -42,13 +44,13 @@ export default function Chat() {
       }
       try {
         const res = await authedFetch("/chat/history", { method: "GET" });
-        const hist = await res.json(); // [{role, content, created_at}... oldest -> newest]
+        const hist = await res.json();
         if (Array.isArray(hist) && hist.length > 0) {
           setMessages(
             hist.map((m: any) => ({
               role: m.role === "user" ? "user" : "assistant",
               content: String(m.content ?? ""),
-            })) as Msg[]
+            }))
           );
         }
       } catch (e) {
@@ -68,7 +70,6 @@ export default function Chat() {
     requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
 
     try {
-      // POST to your backend /chat (JWT is added by authedFetch)
       const res = await authedFetch("/chat", {
         method: "POST",
         body: JSON.stringify({ text: t }),
@@ -88,7 +89,7 @@ export default function Chat() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: C.bg }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.select({ ios: "padding", android: undefined })}
       keyboardVerticalOffset={Platform.select({ ios: 64, android: 0 })}
     >
@@ -99,17 +100,19 @@ export default function Chat() {
           paddingTop: 14,
           paddingBottom: 10,
           borderBottomWidth: 1,
-          borderBottomColor: C.border,
+          borderBottomColor: colors.inputBorder,
+          alignItems: "center",
         }}
       >
-        <Text style={{ color: C.textDark, fontSize: 20, fontWeight: "700" }}>Adaptive Coach</Text>
-        <Text style={{ color: C.textSub, marginTop: 2 }}>Ask about workouts, meals, or macros</Text>
+        <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: "700" }}>
+          Adaptive Coach
+        </Text>
       </View>
 
       {/* Messages */}
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
       >
         {messages.map((m, i) => {
@@ -118,82 +121,138 @@ export default function Chat() {
             <View
               key={i}
               style={{
-                marginBottom: 10,
+                marginBottom: 12,
                 alignItems: isUser ? "flex-end" : "flex-start",
               }}
             >
-              <View
-                style={{
-                  maxWidth: "85%",
-                  backgroundColor: isUser ? C.cardUser : C.cardAI,
-                  paddingVertical: 10,
-                  paddingHorizontal: 12,
-                  borderRadius: 12,
-                }}
-              >
-                <Text style={{ color: isUser ? C.textOnAccent : C.textDark }}>{m.content}</Text>
-              </View>
+              {isUser ? (
+                <View
+                  style={{
+                    backgroundColor: colors.accent,
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderRadius: 16,
+                    maxWidth: "85%",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.buttonText,
+                      fontSize: 15,
+                      lineHeight: 20,
+                    }}
+                  >
+                    {m.content}
+                  </Text>
+                </View>
+              ) : (
+                <Text
+                  style={{
+                    color: colors.textPrimary,
+                    fontSize: 15,
+                    lineHeight: 22,
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  {m.content}
+                </Text>
+              )}
             </View>
           );
         })}
-        {loading && (
-          <View style={{ alignItems: "flex-start" }}>
-            <View
-              style={{
-                backgroundColor: C.cardAI,
-                paddingVertical: 10,
-                paddingHorizontal: 12,
-                borderRadius: 12,
-              }}
-            >
-              <Text style={{ color: C.textSub }}>Thinking…</Text>
-            </View>
-          </View>
-        )}
       </ScrollView>
+
+      {/* Coach is thinking bar */}
+      {loading && (
+        <View
+          style={{
+            backgroundColor: colors.card,
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            marginHorizontal: 16,
+            marginBottom: 8,
+            borderRadius: 12,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Ionicons name="pulse" size={16} color={colors.accent} style={{ marginRight: 8 }} />
+          <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: "600" }}>
+            Coach is thinking
+          </Text>
+        </View>
+      )}
 
       {/* Composer */}
       <View
         style={{
           borderTopWidth: 1,
-          borderTopColor: C.border,
+          borderTopColor: colors.inputBorder,
           padding: 10,
-          backgroundColor: C.bg,
+          backgroundColor: colors.background,
         }}
       >
         <View
           style={{
             flexDirection: "row",
-            backgroundColor: C.inputBg,
+            alignItems: "center",
+            backgroundColor: colors.inputBg,
             borderWidth: 1,
-            borderColor: C.border,
+            borderColor: colors.inputBorder,
             borderRadius: 12,
             paddingHorizontal: 10,
-            alignItems: "center",
           }}
         >
+          {/* + button */}
+          <TouchableOpacity
+            style={{
+              marginRight: 8,
+              width: 30,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: colors.accent,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="add" size={20} color={colors.buttonText} />
+          </TouchableOpacity>
+
+          {/* Input */}
           <TextInput
             value={text}
             onChangeText={setText}
-            placeholder="Write a message…"
-            placeholderTextColor={C.textSub}
-            style={{ flex: 1, paddingVertical: 10, color: C.textDark }}
+            placeholder="Send a message"
+            placeholderTextColor={colors.textSecondary}
+            style={{
+              flex: 1,
+              paddingVertical: 10,
+              color: colors.textPrimary,
+              fontSize: 15,
+            }}
             multiline
           />
+
+          {/* Send */}
           <TouchableOpacity
             onPress={send}
             disabled={disabled}
             style={{
               marginLeft: 8,
-              backgroundColor: disabled ? "#CBD5E0" : C.cardUser,
-              borderRadius: 10,
-              paddingVertical: 8,
-              paddingHorizontal: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: disabled ? "#333" : colors.accent,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Text style={{ color: "#fff", fontWeight: "700" }}>
-              {loading ? "…" : "Send"}
-            </Text>
+            <Ionicons
+              name="arrow-up"
+              size={20}
+              color={disabled ? "#777" : colors.buttonText}
+              style={{ transform: [{ rotate: "45deg" }] }}
+            />
           </TouchableOpacity>
         </View>
       </View>
