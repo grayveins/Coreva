@@ -29,6 +29,16 @@ type PhaseWorkout = {
   exercises: any[];
 };
 
+// day_number 1=Mon … 7=Sun
+const DAY_NAMES: Record<number, string> = {
+  1: "Monday", 2: "Tuesday", 3: "Wednesday",
+  4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday",
+};
+const DAY_SHORT: Record<number, string> = {
+  1: "Mon", 2: "Tue", 3: "Wed",
+  4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun",
+};
+
 export default function WorkoutScreen() {
   const { colors } = useTheme();
   const [userId, setUserId] = useState<string | null>(null);
@@ -270,10 +280,38 @@ export default function WorkoutScreen() {
               Rest day
             </Text>
             <Text allowFontScaling={false} style={[styles.todayExercises, { color: colors.textMuted }]}>
-              No workout planned by your coach for today.
+              No workout planned today. You can still log one.
             </Text>
+            <Pressable onPress={startEmptyWorkout} style={styles.todayStart}>
+              <Text allowFontScaling={false} style={[styles.todayStartText, { color: colors.text }]}>
+                Log anyway
+              </Text>
+              <Ionicons name="add-circle-outline" size={16} color={colors.text} />
+            </Pressable>
           </View>
-        ) : null}
+        ) : (
+          /* No program or no today workout — show a clear start CTA */
+          <Pressable
+            onPress={startEmptyWorkout}
+            style={[styles.todayCard, { backgroundColor: colors.bgSecondary }]}
+          >
+            <Text allowFontScaling={false} style={[styles.todayLabel, { color: colors.textMuted }]}>
+              TODAY
+            </Text>
+            <Text allowFontScaling={false} style={[styles.todayName, { color: colors.text }]}>
+              No workout assigned
+            </Text>
+            <Text allowFontScaling={false} style={[styles.todayExercises, { color: colors.textMuted }]}>
+              Start an empty session or pick from your program below.
+            </Text>
+            <View style={styles.todayStart}>
+              <Text allowFontScaling={false} style={[styles.todayStartText, { color: colors.text }]}>
+                Start Empty Workout
+              </Text>
+              <Ionicons name="add-circle-outline" size={16} color={colors.text} />
+            </View>
+          </Pressable>
+        )}
 
         {/* Program Workouts */}
         {programName && workouts.length > 0 && (
@@ -292,28 +330,38 @@ export default function WorkoutScreen() {
             {workouts.map((workout) => {
               const exerciseCount = workout.exercises?.length || 0;
               const totalSets = (workout.exercises || []).reduce((s: number, e: any) => s + (e.sets || 0), 0);
+              const dayName = DAY_NAMES[workout.day_number] ?? `Day ${workout.day_number}`;
+              const dayShort = DAY_SHORT[workout.day_number];
+              // Highlight today's assigned workout
+              const todayDow = (new Date().getDay() || 7);
+              const isAssignedToday = workout.day_number === todayDow;
               return (
                 <Pressable
                   key={workout.id}
                   onPress={() => openWorkoutDetail(workout)}
-                  style={[styles.workoutCard, { backgroundColor: colors.bgSecondary }]}
+                  style={[
+                    styles.workoutCard,
+                    { backgroundColor: isAssignedToday ? colors.text : colors.bgSecondary },
+                  ]}
                 >
-                  <View style={styles.workoutInfo}>
-                    <View style={styles.workoutDayRow}>
-                      <Text allowFontScaling={false} style={[styles.workoutDay, { color: colors.textMuted }]}>
-                        Day {workout.day_number}
-                      </Text>
-                      <Text allowFontScaling={false} style={[styles.workoutName, { color: colors.text }]}>
-                        {workout.name}
+                  {/* Day pill */}
+                  {dayShort && (
+                    <View style={[styles.dayPill, { backgroundColor: isAssignedToday ? "rgba(255,255,255,0.15)" : colors.border }]}>
+                      <Text allowFontScaling={false} style={[styles.dayPillText, { color: isAssignedToday ? colors.bg : colors.textMuted }]}>
+                        {dayShort}
                       </Text>
                     </View>
-                    {exerciseCount > 0 && (
-                      <Text allowFontScaling={false} numberOfLines={1} style={[styles.workoutMeta, { color: colors.textMuted }]}>
-                        {exerciseCount} exercises · {totalSets} sets
-                      </Text>
-                    )}
+                  )}
+                  <View style={styles.workoutInfo}>
+                    <Text allowFontScaling={false} style={[styles.workoutName, { color: isAssignedToday ? colors.bg : colors.text }]}>
+                      {workout.name}
+                    </Text>
+                    <Text allowFontScaling={false} style={[styles.workoutMeta, { color: isAssignedToday ? "rgba(255,255,255,0.65)" : colors.textMuted }]}>
+                      {dayName}{exerciseCount > 0 ? ` · ${exerciseCount} exercises` : ""}
+                      {totalSets > 0 ? ` · ${totalSets} sets` : ""}
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                  <Ionicons name="chevron-forward" size={16} color={isAssignedToday ? colors.bg : colors.textMuted} />
                 </Pressable>
               );
             })}
@@ -392,10 +440,18 @@ const styles = StyleSheet.create({
     padding: spacing.base,
     borderRadius: radius.md,
     marginBottom: spacing.sm,
+    gap: spacing.sm,
   },
+  dayPill: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  dayPillText: { fontSize: 11, fontWeight: "700" },
   workoutInfo: { flex: 1, gap: 2 },
-  workoutDayRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  workoutDay: { fontSize: 12, fontWeight: "500" },
   workoutName: { fontSize: 15, fontWeight: "600" },
   workoutMeta: { fontSize: 12 },
 

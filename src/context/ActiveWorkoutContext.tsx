@@ -649,6 +649,13 @@ type ProviderProps = {
 export function ActiveWorkoutProvider({ children }: ProviderProps) {
   const [state, dispatch] = useReducer(workoutReducer, undefined, emptyState);
 
+  // Always-current ref to state — used in setTimeout callbacks to avoid
+  // stale closures when multiple sets complete in quick succession.
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   // Get user ID on mount (kept available so a workout can be started
   // without re-fetching the auth user).
   useEffect(() => {
@@ -882,28 +889,34 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
         const messages = ["Nice!", "Strong!", "Solid!", "Keep it up!", "Crushed it!"];
         showToast({ message: messages[Math.floor(Math.random() * messages.length)], type: "setComplete" });
 
-        // Check if exercise is now complete, auto-advance
+        // Check if exercise is now complete, auto-advance.
+        // Use stateRef.current (not the closure's stale `state`) so rapid
+        // multi-set completions always see the latest exercise/set state.
         setTimeout(() => {
-          const currentExercise = state.exercises.find((ex) => ex.id === exerciseId);
+          const current = stateRef.current;
+          const currentExercise = current.exercises.find((ex) => ex.id === exerciseId);
           if (!currentExercise) return;
 
-          // Recount after the toggle (set was just completed)
+          // Include the set we just toggled (state may not have propagated yet
+          // by the time this fires, so we optimistically count it as complete).
           const allComplete = currentExercise.sets.every((s) =>
             s.id === setId ? true : s.completed
           );
 
           if (allComplete) {
-            const idx = state.exercises.findIndex((ex) => ex.id === exerciseId);
-            const isLast = idx === state.exercises.length - 1;
+            const idx = current.exercises.findIndex((ex) => ex.id === exerciseId);
+            const isLast = idx === current.exercises.length - 1;
             if (isLast) {
               hapticCelebration();
               dispatch({ type: "SHOW_CELEBRATION", show: true });
             } else {
-              const nextId = state.exercises[idx + 1]?.id;
+              const nextId = current.exercises[idx + 1]?.id;
               if (nextId) dispatch({ type: "AUTO_ADVANCE", nextExerciseId: nextId });
             }
-          } else {
-            // Start rest timer
+          } else if (!current.restTimer.active) {
+            // Only start the rest timer if one isn't already counting down.
+            // Completing multiple sets quickly would otherwise restart the
+            // timer on each completion, which feels buggy.
             dispatch({ type: "START_REST", afterExerciseId: exerciseId });
           }
         }, 800);

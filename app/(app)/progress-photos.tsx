@@ -5,7 +5,7 @@
  * Skipping a pose advances without saving anything.
  */
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -15,6 +15,13 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  withRepeat,
+} from "react-native-reanimated";
 import { router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -49,6 +56,25 @@ export default function ProgressPhotosScreen() {
   const [pendingUri, setPendingUri] = useState<string | null>(null);
   const [savedCount, setSavedCount] = useState(0);
   const [skippedCount, setSkippedCount] = useState(0);
+  const [timerMode, setTimerMode] = useState<0 | 3 | 10>(0);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownScale = useSharedValue(1);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
+
+  const cancelCountdown = useCallback(() => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setCountdown(null);
+  }, []);
 
   const currentPose = POSE_ORDER[poseIndex];
 
@@ -110,7 +136,7 @@ export default function ProgressPhotosScreen() {
     }
   }, [permission, requestPermission, promptOpenSettings]);
 
-  const handleCapture = useCallback(async () => {
+  const takePicture = useCallback(async () => {
     if (!cameraRef.current) return;
     const photo = await cameraRef.current.takePictureAsync({ quality: 1, skipProcessing: true });
     if (!photo?.uri) return;
@@ -118,6 +144,44 @@ export default function ProgressPhotosScreen() {
     setPendingUri(photo.uri);
     setStage("preview");
   }, []);
+
+  const handleCapture = useCallback(async () => {
+    // If counting down — tapping shutter cancels it
+    if (countdown !== null) {
+      cancelCountdown();
+      return;
+    }
+
+    if (timerMode > 0) {
+      let remaining = timerMode;
+      setCountdown(remaining);
+      // Pulse animation to signal each second
+      countdownScale.value = withSequence(
+        withTiming(1.2, { duration: 150 }),
+        withTiming(1, { duration: 150 }),
+      );
+      countdownRef.current = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          if (countdownRef.current) {
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
+          }
+          setCountdown(null);
+          takePicture();
+        } else {
+          setCountdown(remaining);
+          countdownScale.value = withSequence(
+            withTiming(1.2, { duration: 150 }),
+            withTiming(1, { duration: 150 }),
+          );
+        }
+      }, 1000);
+      return;
+    }
+
+    await takePicture();
+  }, [countdown, timerMode, cancelCountdown, takePicture, countdownScale]);
 
   const handleConfirm = useCallback(async () => {
     if (!pendingUri) return;
@@ -147,6 +211,10 @@ export default function ProgressPhotosScreen() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  const countdownAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: countdownScale.value }],
+  }));
+
   if (stage === "camera") {
     return (
       <View style={[styles.cameraRoot, { backgroundColor: "#000" }]}>
@@ -154,12 +222,45 @@ export default function ProgressPhotosScreen() {
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="front" />
         <PoseGuideOverlay pose={currentPose} />
 
+        {/* Countdown overlay */}
+        {countdown !== null && (
+          <View style={styles.countdownOverlay} pointerEvents="none">
+            <Animated.Text style={[styles.countdownText, countdownAnimStyle]}>
+              {countdown}
+            </Animated.Text>
+          </View>
+        )}
+
+        {/* Timer selector row */}
+        <SafeAreaView edges={["top"]} style={styles.timerRow}>
+          {([0, 3, 10] as const).map((t) => (
+            <Pressable
+              key={t}
+              onPress={() => setTimerMode(t)}
+              style={[styles.timerOption, timerMode === t && styles.timerOptionActive]}
+            >
+              <Ionicons
+                name={t === 0 ? "timer-outline" : "timer"}
+                size={14}
+                color={timerMode === t ? "#000" : "#fff"}
+              />
+              <Text style={[styles.timerOptionText, timerMode === t && { color: "#000" }]}>
+                {t === 0 ? "Off" : `${t}s`}
+              </Text>
+            </Pressable>
+          ))}
+        </SafeAreaView>
+
         <SafeAreaView edges={["bottom"]} style={styles.cameraControls}>
-          <Pressable style={styles.cancelBtn} onPress={() => setStage("intro")}>
-            <Text style={styles.cancelText}>Cancel</Text>
+          <Pressable style={styles.cancelBtn} onPress={countdown !== null ? cancelCountdown : () => setStage("intro")}>
+            <Text style={styles.cancelText}>{countdown !== null ? "Cancel" : "Cancel"}</Text>
           </Pressable>
           <Pressable style={styles.shutterBtn} onPress={handleCapture}>
-            <View style={styles.shutterInner} />
+            {countdown !== null ? (
+              <Text style={styles.shutterCancelText}>✕</Text>
+            ) : (
+              <View style={styles.shutterInner} />
+            )}
           </Pressable>
           <View style={styles.cameraControlsRight} />
         </SafeAreaView>
@@ -366,6 +467,11 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     backgroundColor: "rgba(255,255,255,0.95)",
   },
+  shutterCancelText: {
+    fontSize: 24,
+    color: "#fff",
+    fontWeight: "700",
+  },
   confirmBtn: {
     paddingHorizontal: 18,
     paddingVertical: 10,
@@ -373,4 +479,49 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   confirmText: { color: "#000", fontSize: 15, fontWeight: "600" },
+
+  // Self-timer
+  timerRow: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  timerOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  timerOptionActive: {
+    backgroundColor: "#fff",
+  },
+  timerOptionText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  countdownOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.35)",
+    zIndex: 10,
+  },
+  countdownText: {
+    fontSize: 120,
+    fontWeight: "800",
+    color: "#fff",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
 });
