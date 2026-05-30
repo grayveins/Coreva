@@ -1,127 +1,45 @@
 /**
- * ExerciseSwapModal - Exercise substitution modal
- * 
- * Features:
- * - Filter by muscle group (pre-selected based on current exercise)
- * - Filter by equipment available
- * - Search exercises
- * - Shows exercise alternatives with same muscle targets
- * 
- * Medium complexity: muscle group + equipment filter
+ * ExerciseSwapModal — Exercise substitution
+ *
+ * Sources alternatives from the real Supabase `exercises` library (same data
+ * as the Add-Exercise picker) instead of a hardcoded list, so swaps include
+ * the full curated library + custom exercises and preserve the exercise id for
+ * history/PR tracking. Results are sorted so movements sharing the current
+ * exercise's primary muscles surface first; a search box narrows further.
+ *
+ * Deliberately filter-light: no equipment/muscle chips. A swap is a quick
+ * "find me something similar" action, not a library browse.
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useMemo } from "react";
 import {
   Modal,
   View,
   Text,
   Pressable,
-  ScrollView,
   TextInput,
+  FlatList,
+  ActivityIndicator,
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/src/context/ThemeContext";
-import { spacing, radius, shadows } from "@/src/theme";
+import { spacing, radius } from "@/src/theme";
 import { hapticPress } from "@/src/animations/feedback/haptics";
+import { useExercises, type DBExercise } from "@/src/hooks/useExercises";
 
-// Equipment types
-const EQUIPMENT_OPTIONS = [
-  { id: "barbell", label: "Barbell", icon: "barbell-outline" },
-  { id: "dumbbell", label: "Dumbbells", icon: "barbell-outline" },
-  { id: "cable", label: "Cable", icon: "git-network-outline" },
-  { id: "machine", label: "Machine", icon: "cog-outline" },
-  { id: "bodyweight", label: "Bodyweight", icon: "body-outline" },
-  { id: "kettlebell", label: "Kettlebell", icon: "fitness-outline" },
-] as const;
-
-// Muscle groups
-const MUSCLE_GROUPS = [
-  { id: "chest", label: "Chest" },
-  { id: "back", label: "Back" },
-  { id: "shoulders", label: "Shoulders" },
-  { id: "biceps", label: "Biceps" },
-  { id: "triceps", label: "Triceps" },
-  { id: "quads", label: "Quads" },
-  { id: "hamstrings", label: "Hamstrings" },
-  { id: "glutes", label: "Glutes" },
-  { id: "calves", label: "Calves" },
-  { id: "core", label: "Core" },
-] as const;
-
-// Exercise database (simplified - in production this would come from API/DB)
-const EXERCISE_DATABASE: Exercise[] = [
-  // Chest
-  { name: "Bench Press", muscles: ["chest", "triceps"], equipment: "barbell" },
-  { name: "Incline Bench Press", muscles: ["chest", "shoulders"], equipment: "barbell" },
-  { name: "Dumbbell Bench Press", muscles: ["chest", "triceps"], equipment: "dumbbell" },
-  { name: "Incline DB Press", muscles: ["chest", "shoulders"], equipment: "dumbbell" },
-  { name: "Cable Flyes", muscles: ["chest"], equipment: "cable" },
-  { name: "Chest Press Machine", muscles: ["chest", "triceps"], equipment: "machine" },
-  { name: "Push-ups", muscles: ["chest", "triceps"], equipment: "bodyweight" },
-  { name: "Dips", muscles: ["chest", "triceps"], equipment: "bodyweight" },
-  
-  // Back
-  { name: "Barbell Rows", muscles: ["back", "biceps"], equipment: "barbell" },
-  { name: "Deadlift", muscles: ["back", "hamstrings", "glutes"], equipment: "barbell" },
-  { name: "Dumbbell Rows", muscles: ["back", "biceps"], equipment: "dumbbell" },
-  { name: "Pull-ups", muscles: ["back", "biceps"], equipment: "bodyweight" },
-  { name: "Lat Pulldown", muscles: ["back", "biceps"], equipment: "cable" },
-  { name: "Seated Cable Row", muscles: ["back"], equipment: "cable" },
-  { name: "T-Bar Row", muscles: ["back"], equipment: "barbell" },
-  
-  // Shoulders
-  { name: "Overhead Press", muscles: ["shoulders", "triceps"], equipment: "barbell" },
-  { name: "Dumbbell Shoulder Press", muscles: ["shoulders", "triceps"], equipment: "dumbbell" },
-  { name: "Lateral Raises", muscles: ["shoulders"], equipment: "dumbbell" },
-  { name: "Face Pulls", muscles: ["shoulders", "back"], equipment: "cable" },
-  { name: "Front Raises", muscles: ["shoulders"], equipment: "dumbbell" },
-  { name: "Arnold Press", muscles: ["shoulders"], equipment: "dumbbell" },
-  
-  // Arms
-  { name: "Bicep Curls", muscles: ["biceps"], equipment: "dumbbell" },
-  { name: "Barbell Curls", muscles: ["biceps"], equipment: "barbell" },
-  { name: "Hammer Curls", muscles: ["biceps"], equipment: "dumbbell" },
-  { name: "Cable Curls", muscles: ["biceps"], equipment: "cable" },
-  { name: "Tricep Pushdowns", muscles: ["triceps"], equipment: "cable" },
-  { name: "Skull Crushers", muscles: ["triceps"], equipment: "barbell" },
-  { name: "Overhead Tricep Extension", muscles: ["triceps"], equipment: "dumbbell" },
-  
-  // Legs
-  { name: "Squats", muscles: ["quads", "glutes"], equipment: "barbell" },
-  { name: "Front Squats", muscles: ["quads", "core"], equipment: "barbell" },
-  { name: "Goblet Squats", muscles: ["quads", "glutes"], equipment: "dumbbell" },
-  { name: "Leg Press", muscles: ["quads", "glutes"], equipment: "machine" },
-  { name: "Leg Extension", muscles: ["quads"], equipment: "machine" },
-  { name: "Romanian Deadlift", muscles: ["hamstrings", "glutes"], equipment: "barbell" },
-  { name: "Leg Curls", muscles: ["hamstrings"], equipment: "machine" },
-  { name: "Bulgarian Split Squat", muscles: ["quads", "glutes"], equipment: "dumbbell" },
-  { name: "Lunges", muscles: ["quads", "glutes"], equipment: "bodyweight" },
-  { name: "Hip Thrusts", muscles: ["glutes", "hamstrings"], equipment: "barbell" },
-  { name: "Calf Raises", muscles: ["calves"], equipment: "machine" },
-  { name: "Standing Calf Raises", muscles: ["calves"], equipment: "bodyweight" },
-  
-  // Core
-  { name: "Planks", muscles: ["core"], equipment: "bodyweight" },
-  { name: "Crunches", muscles: ["core"], equipment: "bodyweight" },
-  { name: "Leg Raises", muscles: ["core"], equipment: "bodyweight" },
-  { name: "Cable Woodchops", muscles: ["core"], equipment: "cable" },
-  { name: "Ab Rollouts", muscles: ["core"], equipment: "bodyweight" },
-];
-
-type Exercise = {
+export type SwapSelection = {
+  id: string;
   name: string;
   muscles: string[];
-  equipment: string;
 };
 
 type ExerciseSwapModalProps = {
   visible: boolean;
   onClose: () => void;
-  onSelectExercise: (exercise: Exercise) => void;
+  onSelectExercise: (exercise: SwapSelection) => void;
   currentExercise: string;
   currentMuscles: string[];
 };
@@ -134,92 +52,68 @@ export const ExerciseSwapModal: React.FC<ExerciseSwapModalProps> = ({
   currentMuscles,
 }) => {
   const { colors } = useTheme();
-  
-  // State
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMuscles, setSelectedMuscles] = useState<string[]>(
-    currentMuscles.map(m => m.toLowerCase())
+  const { exercises, loading, search, setSearch } = useExercises();
+
+  const targetMuscles = useMemo(
+    () => new Set(currentMuscles.map((m) => m.toLowerCase())),
+    [currentMuscles]
   );
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
 
-  // Filter exercises based on search, muscles, and equipment
-  const filteredExercises = useMemo(() => {
-    return EXERCISE_DATABASE.filter(exercise => {
-      // Don't show current exercise
-      if (exercise.name.toLowerCase() === currentExercise.toLowerCase()) {
-        return false;
-      }
-      
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!exercise.name.toLowerCase().includes(query)) {
-          return false;
-        }
-      }
-      
-      // Muscle filter (match any selected muscle)
-      if (selectedMuscles.length > 0) {
-        const hasMatchingMuscle = exercise.muscles.some(
-          m => selectedMuscles.includes(m.toLowerCase())
-        );
-        if (!hasMatchingMuscle) return false;
-      }
-      
-      // Equipment filter
-      if (selectedEquipment.length > 0) {
-        if (!selectedEquipment.includes(exercise.equipment)) {
-          return false;
-        }
-      }
-      
-      return true;
-    }).sort((a, b) => {
-      // Sort by number of matching muscles (most relevant first)
-      const aMatches = a.muscles.filter(m => 
-        selectedMuscles.includes(m.toLowerCase())
-      ).length;
-      const bMatches = b.muscles.filter(m => 
-        selectedMuscles.includes(m.toLowerCase())
-      ).length;
-      return bMatches - aMatches;
+  // `exercises` is already search-filtered by the hook. Exclude the current
+  // movement, then rank by how many primary muscles overlap with it so the
+  // closest substitutes float to the top.
+  const results = useMemo(() => {
+    const currentLower = currentExercise.trim().toLowerCase();
+    const overlap = (ex: DBExercise) =>
+      (ex.primary_muscles ?? []).filter((m) => targetMuscles.has(m.toLowerCase())).length;
+    return exercises
+      .filter((ex) => ex.name.toLowerCase() !== currentLower)
+      .map((ex) => ({ ex, score: overlap(ex) }))
+      .sort((a, b) => b.score - a.score || a.ex.name.localeCompare(b.ex.name))
+      .map((r) => r.ex);
+  }, [exercises, currentExercise, targetMuscles]);
+
+  const handleSelect = (ex: DBExercise) => {
+    hapticPress();
+    onSelectExercise({
+      id: ex.id,
+      name: ex.name,
+      muscles: ex.primary_muscles ?? [],
     });
-  }, [searchQuery, selectedMuscles, selectedEquipment, currentExercise]);
-
-  // Toggle muscle selection
-  const toggleMuscle = useCallback((muscleId: string) => {
-    hapticPress();
-    setSelectedMuscles(prev => 
-      prev.includes(muscleId)
-        ? prev.filter(m => m !== muscleId)
-        : [...prev, muscleId]
-    );
-  }, []);
-
-  // Toggle equipment selection
-  const toggleEquipment = useCallback((equipmentId: string) => {
-    hapticPress();
-    setSelectedEquipment(prev =>
-      prev.includes(equipmentId)
-        ? prev.filter(e => e !== equipmentId)
-        : [...prev, equipmentId]
-    );
-  }, []);
-
-  // Handle exercise selection
-  const handleSelect = useCallback((exercise: Exercise) => {
-    hapticPress();
-    onSelectExercise(exercise);
     onClose();
-  }, [onSelectExercise, onClose]);
+  };
 
-  // Reset filters
-  const resetFilters = useCallback(() => {
-    hapticPress();
-    setSearchQuery("");
-    setSelectedMuscles(currentMuscles.map(m => m.toLowerCase()));
-    setSelectedEquipment([]);
-  }, [currentMuscles]);
+  const renderItem = ({ item }: { item: DBExercise }) => (
+    <Pressable
+      onPress={() => handleSelect(item)}
+      style={({ pressed }) => [
+        styles.exerciseRow,
+        { borderBottomColor: colors.border },
+        pressed && { backgroundColor: colors.bgSecondary },
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={`Swap to ${item.name}`}
+    >
+      <View style={styles.exerciseInfo}>
+        <Text allowFontScaling={false} style={[styles.exerciseName, { color: colors.text }]}>
+          {item.name}
+        </Text>
+        <View style={styles.metaRow}>
+          {item.equipment && (
+            <Text allowFontScaling={false} style={[styles.metaText, { color: colors.textMuted }]}>
+              {item.equipment}
+            </Text>
+          )}
+          {(item.primary_muscles ?? []).length > 0 && (
+            <Text allowFontScaling={false} style={[styles.metaText, { color: colors.textSecondary }]}>
+              {(item.primary_muscles ?? []).join(" · ")}
+            </Text>
+          )}
+        </View>
+      </View>
+      <Ionicons name="add-circle-outline" size={22} color={colors.text} />
+    </Pressable>
+  );
 
   return (
     <Modal
@@ -231,41 +125,16 @@ export const ExerciseSwapModal: React.FC<ExerciseSwapModalProps> = ({
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={["top"]}>
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityLabel="Close">
             <Ionicons name="close" size={24} color={colors.text} />
           </Pressable>
           <Text allowFontScaling={false} style={[styles.title, { color: colors.text }]}>
             Swap Exercise
           </Text>
-          <Pressable onPress={resetFilters} style={styles.resetButton}>
-            <Text allowFontScaling={false} style={[styles.resetText, { color: colors.primary }]}>
-              Reset
-            </Text>
-          </Pressable>
+          <View style={styles.closeButton} />
         </View>
 
-        {/* Search */}
-        <View style={styles.searchContainer}>
-          <View style={[styles.searchBox, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
-            <Ionicons name="search" size={18} color={colors.textMuted} />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search exercises..."
-              placeholderTextColor={colors.inputPlaceholder}
-              style={[styles.searchInput, { color: colors.text }]}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-              </Pressable>
-            )}
-          </View>
-        </View>
-
-        {/* Current exercise indicator */}
+        {/* Replacing indicator */}
         <View style={[styles.currentExercise, { backgroundColor: colors.bgSecondary }]}>
           <Text allowFontScaling={false} style={[styles.currentLabel, { color: colors.textMuted }]}>
             REPLACING
@@ -275,170 +144,56 @@ export const ExerciseSwapModal: React.FC<ExerciseSwapModalProps> = ({
           </Text>
         </View>
 
-        {/* Muscle filter chips */}
-        <View style={styles.filterSection}>
-          <Text allowFontScaling={false} style={[styles.filterLabel, { color: colors.textMuted }]}>
-            Target Muscles
-          </Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsContainer}
-          >
-            {MUSCLE_GROUPS.map(muscle => (
-              <Pressable
-                key={muscle.id}
-                onPress={() => toggleMuscle(muscle.id)}
-                style={[
-                  styles.chip,
-                  { 
-                    backgroundColor: selectedMuscles.includes(muscle.id) 
-                      ? colors.primaryMuted 
-                      : colors.bgSecondary,
-                    borderColor: selectedMuscles.includes(muscle.id)
-                      ? colors.primary
-                      : colors.border,
-                  }
-                ]}
-              >
-                <Text 
-                  allowFontScaling={false} 
-                  style={[
-                    styles.chipText,
-                    { color: selectedMuscles.includes(muscle.id) ? colors.primary : colors.textSecondary }
-                  ]}
-                >
-                  {muscle.label}
-                </Text>
+        {/* Search */}
+        <View style={styles.searchContainer}>
+          <View style={[styles.searchBox, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
+            <Ionicons name="search" size={18} color={colors.textMuted} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Search exercises..."
+              placeholderTextColor={colors.inputPlaceholder}
+              style={[styles.searchInput, { color: colors.text }]}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {search.length > 0 && (
+              <Pressable onPress={() => setSearch("")} accessibilityLabel="Clear search">
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
               </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Equipment filter chips */}
-        <View style={styles.filterSection}>
-          <Text allowFontScaling={false} style={[styles.filterLabel, { color: colors.textMuted }]}>
-            Equipment
-          </Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsContainer}
-          >
-            {EQUIPMENT_OPTIONS.map(equip => (
-              <Pressable
-                key={equip.id}
-                onPress={() => toggleEquipment(equip.id)}
-                style={[
-                  styles.chip,
-                  { 
-                    backgroundColor: selectedEquipment.includes(equip.id) 
-                      ? colors.primaryMuted 
-                      : colors.bgSecondary,
-                    borderColor: selectedEquipment.includes(equip.id)
-                      ? colors.primary
-                      : colors.border,
-                  }
-                ]}
-              >
-                <Ionicons 
-                  name={equip.icon as any} 
-                  size={14} 
-                  color={selectedEquipment.includes(equip.id) ? colors.primary : colors.textSecondary}
-                  style={{ marginRight: 4 }}
-                />
-                <Text 
-                  allowFontScaling={false} 
-                  style={[
-                    styles.chipText,
-                    { color: selectedEquipment.includes(equip.id) ? colors.primary : colors.textSecondary }
-                  ]}
-                >
-                  {equip.label}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+            )}
+          </View>
         </View>
 
         {/* Results */}
-        <View style={styles.resultsHeader}>
-          <Text allowFontScaling={false} style={[styles.resultsCount, { color: colors.textMuted }]}>
-            {filteredExercises.length} alternatives found
-          </Text>
-        </View>
-
-        <ScrollView 
-          style={styles.resultsList}
-          contentContainerStyle={styles.resultsContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {filteredExercises.map((exercise, index) => (
-            <Animated.View
-              key={exercise.name}
-              entering={FadeInDown.delay(index * 30).duration(200)}
-            >
-              <Pressable
-                onPress={() => handleSelect(exercise)}
-                style={({ pressed }) => [
-                  styles.exerciseRow,
-                  { backgroundColor: colors.card },
-                  shadows.sm,
-                  pressed && { opacity: 0.8 },
-                ]}
-              >
-                <View style={styles.exerciseInfo}>
-                  <Text 
-                    allowFontScaling={false} 
-                    style={[styles.exerciseName, { color: colors.text }]}
-                  >
-                    {exercise.name}
-                  </Text>
-                  <View style={styles.exerciseMeta}>
-                    <Text 
-                      allowFontScaling={false} 
-                      style={[styles.exerciseMuscles, { color: colors.textMuted }]}
-                    >
-                      {exercise.muscles.join(" · ")}
-                    </Text>
-                    <View style={[styles.equipmentBadge, { backgroundColor: colors.bgSecondary }]}>
-                      <Text 
-                        allowFontScaling={false} 
-                        style={[styles.equipmentText, { color: colors.textSecondary }]}
-                      >
-                        {exercise.equipment}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-                <Ionicons name="add-circle" size={24} color={colors.primary} />
-              </Pressable>
-            </Animated.View>
-          ))}
-
-          {filteredExercises.length === 0 && (
-            <View style={styles.emptyState}>
-              <Ionicons name="barbell-outline" size={48} color={colors.textMuted} />
-              <Text 
-                allowFontScaling={false} 
-                style={[styles.emptyText, { color: colors.textMuted }]}
-              >
-                No exercises found.{"\n"}Try adjusting filters.
-              </Text>
-            </View>
-          )}
-
-          <View style={{ height: 40 }} />
-        </ScrollView>
+        {loading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator color={colors.text} />
+          </View>
+        ) : (
+          <FlatList
+            data={results}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.centered}>
+                <Ionicons name="barbell-outline" size={48} color={colors.textMuted} />
+                <Text allowFontScaling={false} style={[styles.emptyText, { color: colors.textMuted }]}>
+                  No exercises found.{"\n"}Try a different search.
+                </Text>
+              </View>
+            }
+          />
+        )}
       </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -458,14 +213,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },
-  resetButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
+  currentExercise: {
+    marginHorizontal: spacing.base,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
   },
-  resetText: {
-    fontSize: 14,
+  currentLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  currentName: {
+    fontSize: 15,
     fontWeight: "500",
     fontFamily: "Inter_500Medium",
   },
@@ -487,103 +249,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Inter_400Regular",
   },
-  currentExercise: {
-    marginHorizontal: spacing.base,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    marginBottom: spacing.md,
-  },
-  currentLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  currentName: {
-    fontSize: 15,
-    fontWeight: "500",
-    fontFamily: "Inter_500Medium",
-  },
-  filterSection: {
-    marginBottom: spacing.md,
-  },
-  filterLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+  listContent: {
     paddingHorizontal: spacing.base,
-    marginBottom: spacing.sm,
-  },
-  chipsContainer: {
-    paddingHorizontal: spacing.base,
-    gap: spacing.sm,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: "500",
-    fontFamily: "Inter_500Medium",
-  },
-  resultsHeader: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.sm,
-  },
-  resultsCount: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-  },
-  resultsList: {
-    flex: 1,
-  },
-  resultsContent: {
-    paddingHorizontal: spacing.base,
+    paddingBottom: 40,
   },
   exerciseRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: spacing.base,
-    borderRadius: radius.md,
-    marginBottom: spacing.sm,
+    justifyContent: "space-between",
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: spacing.sm,
   },
-  exerciseInfo: {
-    flex: 1,
-    gap: 4,
-  },
+  exerciseInfo: { flex: 1, gap: 4 },
   exerciseName: {
     fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },
-  exerciseMeta: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
-  exerciseMuscles: {
+  metaText: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-  },
-  equipmentBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.xs,
-  },
-  equipmentText: {
-    fontSize: 11,
-    fontWeight: "500",
-    fontFamily: "Inter_500Medium",
     textTransform: "capitalize",
   },
-  emptyState: {
+  centered: {
     alignItems: "center",
+    justifyContent: "center",
     paddingVertical: spacing.xxl,
     gap: spacing.md,
   },

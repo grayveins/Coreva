@@ -564,6 +564,7 @@ function ActiveWorkoutInner() {
             actions.swapExercise(swapExerciseId, {
               name: newEx.name,
               muscles: newEx.muscles,
+              exerciseId: newEx.id,
             });
             setShowSwapModal(false);
             setSwapExerciseId(null);
