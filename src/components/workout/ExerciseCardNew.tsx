@@ -91,7 +91,8 @@ export const ExerciseCardNew: React.FC<ExerciseCardNewProps> = ({
             allowFontScaling={false}
             style={[styles.meta, { color: colors.textMuted }]}
           >
-            {`Set ${completedSets} of ${totalSets} · ${targetReps || "8-12"} reps · RIR ${targetRIR ?? 2}`}
+            {`Set ${completedSets} of ${totalSets}`}
+            {targetReps ? ` · ${targetReps} reps · RIR ${targetRIR ?? 2}` : ""}
           </Text>
           {muscles && muscles.length > 0 && (
             <View style={styles.muscleRow}>

@@ -126,7 +126,7 @@ type Action =
   // Exercise management
   | { type: "ADD_EXERCISE"; exercise: Omit<ActiveExercise, "orderIndex" | "id" | "isExpanded"> }
   | { type: "REMOVE_EXERCISE"; exerciseId: string }
-  | { type: "SWAP_EXERCISE"; exerciseId: string; newExercise: { name: string; muscles: string[] } }
+  | { type: "SWAP_EXERCISE"; exerciseId: string; newExercise: { name: string; muscles: string[]; exerciseId?: string } }
   | { type: "REORDER_EXERCISES"; fromIndex: number; toIndex: number }
   | { type: "TOGGLE_EXPAND"; exerciseId: string }
   | { type: "UPDATE_NOTES"; exerciseId: string; notes: string }
@@ -328,11 +328,19 @@ function workoutReducer(state: ActiveWorkoutState, action: Action): ActiveWorkou
         ...state,
         exercises: state.exercises.map((ex) => {
           if (ex.id !== action.exerciseId) return ex;
+          // A swapped-in movement is the user's own substitution, not part of
+          // the coach's prescription — so we drop the original's set count and
+          // rep/RIR target entirely and start from a single blank set. An empty
+          // `targetReps` tells the card to hide the recommendation line.
           return {
             ...ex,
             name: action.newExercise.name,
             muscles: action.newExercise.muscles,
-            sets: ex.sets.map((s) => ({ ...s, weight: "", reps: "", completed: false, isPR: false })),
+            exerciseId: action.newExercise.exerciseId,
+            sets: [
+              { id: generateSetId(), weight: "", reps: "", completed: false, isWarmup: false, isPR: false },
+            ],
+            targetReps: "",
             notes: "",
           };
         }),
@@ -592,7 +600,7 @@ export type ActiveWorkoutActions = {
   // Exercises
   addExercise: (exercise: Omit<ActiveExercise, "orderIndex" | "id" | "isExpanded">) => void;
   removeExercise: (exerciseId: string) => void;
-  swapExercise: (exerciseId: string, newExercise: { name: string; muscles: string[] }) => void;
+  swapExercise: (exerciseId: string, newExercise: { name: string; muscles: string[]; exerciseId?: string }) => void;
   reorderExercises: (fromIndex: number, toIndex: number) => void;
   toggleExpand: (exerciseId: string) => void;
   updateNotes: (exerciseId: string, notes: string) => void;

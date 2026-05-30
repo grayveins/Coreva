@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ import {
 import { dailyFlagPrefix, ymdFromDailyFlagKey } from "@/src/hooks/useDailyFlag";
 import { hapticPress } from "@/src/animations/feedback/haptics";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   startOfMonth,
   endOfMonth,
@@ -136,7 +136,15 @@ export default function CalendarScreen() {
     setLoading(false);
   }, [currentMonth]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // Refetch whenever the tab gains focus — tab screens stay mounted in
+  // Expo Router, so a plain mount effect would show stale data after the
+  // user logs a workout elsewhere and returns here. `fetchData` identity
+  // also changes with `currentMonth`, so month navigation still refetches.
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
