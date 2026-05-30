@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '../types/database';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -8,7 +9,7 @@ export const supabaseConfigError = hasSupabaseConfig
   ? null
   : 'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY in the build environment.';
 
-type SupabaseClientInstance = ReturnType<typeof createClient>;
+type SupabaseClientInstance = SupabaseClient<Database>;
 
 const missingConfigHandler: ProxyHandler<SupabaseClientInstance> = {
   get() {
@@ -28,7 +29,7 @@ if (supabaseUrl && supabaseAnonKey) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { AppState } = require('react-native');
 
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+  supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       storage: AsyncStorage,
       autoRefreshToken: true,
