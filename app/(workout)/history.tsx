@@ -19,15 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
-import {
-  format,
-  parseISO,
-  differenceInMinutes,
-  isToday,
-  isYesterday,
-  isThisWeek,
-  isThisMonth,
-} from "date-fns";
+import { format, parseISO, differenceInMinutes, isThisMonth } from "date-fns";
 
 import { useTheme } from "@/src/context/ThemeContext";
 import { supabase } from "@/lib/supabase";
@@ -163,29 +155,19 @@ export default function WorkoutHistoryScreen() {
     fetchWorkouts();
   }, [fetchWorkouts]);
 
+  // Group by calendar month (Hevy-style). `workouts` arrives sorted
+  // newest-first, and a Map preserves that insertion order, so months come
+  // out most-recent first. The current month reads "This month".
   const groupedWorkouts = useMemo((): GroupedWorkouts[] => {
-    const groups = {
-      today: [] as WorkoutSession[],
-      yesterday: [] as WorkoutSession[],
-      thisWeek: [] as WorkoutSession[],
-      thisMonth: [] as WorkoutSession[],
-      earlier: [] as WorkoutSession[],
-    };
-    workouts.forEach((w) => {
+    const byMonth = new Map<string, WorkoutSession[]>();
+    for (const w of workouts) {
       const d = parseISO(w.started_at);
-      if (isToday(d)) groups.today.push(w);
-      else if (isYesterday(d)) groups.yesterday.push(w);
-      else if (isThisWeek(d, { weekStartsOn: 1 })) groups.thisWeek.push(w);
-      else if (isThisMonth(d)) groups.thisMonth.push(w);
-      else groups.earlier.push(w);
-    });
-    const out: GroupedWorkouts[] = [];
-    if (groups.today.length) out.push({ label: "Today", workouts: groups.today });
-    if (groups.yesterday.length) out.push({ label: "Yesterday", workouts: groups.yesterday });
-    if (groups.thisWeek.length) out.push({ label: "This week", workouts: groups.thisWeek });
-    if (groups.thisMonth.length) out.push({ label: "This month", workouts: groups.thisMonth });
-    if (groups.earlier.length) out.push({ label: "Earlier", workouts: groups.earlier });
-    return out;
+      const label = isThisMonth(d) ? "This month" : format(d, "MMMM yyyy");
+      const bucket = byMonth.get(label);
+      if (bucket) bucket.push(w);
+      else byMonth.set(label, [w]);
+    }
+    return Array.from(byMonth, ([label, ws]) => ({ label, workouts: ws }));
   }, [workouts]);
 
   const getStats = (w: WorkoutSession) => {
