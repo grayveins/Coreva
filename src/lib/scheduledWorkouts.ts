@@ -65,6 +65,45 @@ export type ResolvedDay =
    *  the currently active phase, matching pre-Schedule-v0 behavior. */
   | { kind: "fallback"; workout: WorkoutLite | null };
 
+/** A future (or today) coach-scheduled training day, resolved to its workout. */
+export type UpcomingSession = { iso: string; date: Date; workout: WorkoutLite };
+
+/** Add whole days to a date without TZ drift (local midnight arithmetic). */
+function addLocalDays(from: Date, n: number): Date {
+  return new Date(from.getFullYear(), from.getMonth(), from.getDate() + n);
+}
+
+/**
+ * Walk a date window and collect the coach's actually-scheduled training days
+ * (skipping rest days and dates with no assignment). This reflects the real
+ * cadence — every-other-day, 3x/week, whatever the coach set — instead of
+ * mapping phase_workouts onto weekdays by `day_number`.
+ *
+ * Returns up to `max` sessions in chronological order. Empty when the client
+ * has no `scheduled_workouts` in the window (caller falls back to the legacy
+ * weekly phase_workouts list).
+ */
+export function collectUpcomingFromSchedule(args: {
+  from: Date;
+  days: number;
+  scheduledByDate: ScheduledMap;
+  workoutsById: Map<string, WorkoutLite>;
+  max?: number;
+}): UpcomingSession[] {
+  const { from, days, scheduledByDate, workoutsById, max = 7 } = args;
+  const out: UpcomingSession[] = [];
+  for (let i = 0; i < days && out.length < max; i++) {
+    const date = addLocalDays(from, i);
+    const row = scheduledByDate.get(isoDate(date));
+    if (!row || row.source_type === "rest") continue;
+    if (row.source_type === "phase_workout" && row.phase_workout_id) {
+      const workout = workoutsById.get(row.phase_workout_id);
+      if (workout) out.push({ iso: isoDate(date), date, workout });
+    }
+  }
+  return out;
+}
+
 export function resolveDay(args: {
   date: Date;
   scheduledByDate: ScheduledMap;
