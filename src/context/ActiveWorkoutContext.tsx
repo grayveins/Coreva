@@ -12,6 +12,7 @@ import React, {
   useCallback,
   useEffect,
   useRef,
+  useState,
   useMemo,
   type ReactNode,
 } from "react";
@@ -22,6 +23,7 @@ import { haptic, hapticPress, hapticSuccess, hapticCelebration } from "@/src/ani
 import { showToast } from "@/src/animations/celebrations";
 import { invalidateAndNotify } from "@/lib/coachContextCache";
 import { computeSessionTimestamps } from "@/src/lib/sessionDate";
+import { StaleWorkoutSheet } from "@/src/components/workout/StaleWorkoutSheet";
 // EffortLevel may be used later for RIR tracking per set
 
 // =============================================================================
@@ -224,6 +226,30 @@ export async function loadDraft(): Promise<WorkoutDraft | null> {
 }
 
 const DEFAULT_REST_DURATION = 90;
+
+/** A rehydrated draft older than this (or started on a prior calendar day)
+ *  is "stale" — we ask the user what to do rather than silently resuming. */
+const STALE_RESUME_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+function isDraftStale(startTime: number, now: number = Date.now()): boolean {
+  if (now - startTime > STALE_RESUME_MS) return true;
+  return new Date(startTime).toDateString() !== new Date(now).toDateString();
+}
+
+/** Friendly age label for the stale-workout prompt. */
+export function staleStartedLabel(startTime: number, now: number = Date.now()): string {
+  const startDay = new Date(startTime);
+  startDay.setHours(0, 0, 0, 0);
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((today.getTime() - startDay.getTime()) / 86_400_000);
+  if (days <= 0) {
+    const hrs = Math.floor((now - startTime) / 3_600_000);
+    return hrs >= 1 ? `${hrs} hour${hrs === 1 ? "" : "s"} ago` : "earlier today";
+  }
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
+}
 
 function emptyState(): ActiveWorkoutState {
   return {
@@ -666,8 +692,13 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
     getUser();
   }, []);
 
+  // Stale-draft prompt: set when a rehydrated session is too old to silently
+  // resume (left running for hours, or started on a prior calendar day).
+  const [staleStartTime, setStaleStartTime] = useState<number | null>(null);
+
   // Rehydrate from AsyncStorage exactly once on mount. If a draft exists
-  // we resume the workout; otherwise the provider stays inactive.
+  // we resume the workout; otherwise the provider stays inactive. A stale
+  // draft is resumed too (so nothing is lost) but flagged for the prompt.
   const rehydratedRef = useRef(false);
   useEffect(() => {
     if (rehydratedRef.current) return;
@@ -690,6 +721,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
           userId: draft.userId,
         },
       });
+      if (isDraftStale(draft.startTime)) setStaleStartTime(draft.startTime);
     })();
     return () => {
       cancelled = true;
@@ -971,10 +1003,14 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
 
       try {
         // 1. Create session — backfill to selected day if user logged for a past date
+        const lastActivityAt = state.setCompletionTimestamps.length
+          ? Math.max(...state.setCompletionTimestamps)
+          : null;
         const { startedAt, endedAt } = computeSessionTimestamps({
           startTime: state.startTime,
           now: new Date(),
           sessionDate: state.sessionDate,
+          lastActivityAt,
         });
 
         const { data: sessionData, error: sessionError } = await supabase
@@ -1127,16 +1163,40 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
     updateTitle: (title) => {
       dispatch({ type: "UPDATE_TITLE", title });
     },
-  }), [state.exercises, state.userId, state.startTime, state.title, state.sessionDate]);
+  }), [state.exercises, state.userId, state.startTime, state.title, state.sessionDate, state.setCompletionTimestamps]);
 
   const value = useMemo<ContextValue>(
     () => ({ state, actions, progress, formatTime }),
     [state, actions, progress, formatTime]
   );
 
+  const staleCompletedSets = useMemo(
+    () =>
+      state.exercises.reduce(
+        (n, ex) => n + ex.sets.filter((s) => s.completed).length,
+        0,
+      ),
+    [state.exercises],
+  );
+
   return (
     <ActiveWorkoutContext.Provider value={value}>
       {children}
+      <StaleWorkoutSheet
+        visible={staleStartTime != null}
+        startedLabel={staleStartTime != null ? staleStartedLabel(staleStartTime) : ""}
+        title={state.title}
+        completedSets={staleCompletedSets}
+        onResume={() => setStaleStartTime(null)}
+        onSave={() => {
+          setStaleStartTime(null);
+          actions.finishWorkout().catch(() => {});
+        }}
+        onDiscard={() => {
+          setStaleStartTime(null);
+          actions.discardWorkout();
+        }}
+      />
     </ActiveWorkoutContext.Provider>
   );
 }
