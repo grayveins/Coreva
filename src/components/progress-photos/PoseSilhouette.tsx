@@ -70,7 +70,7 @@ function BackFigure() {
   const cx = W / 2;
   return (
     <G>
-      {/* Head — no facial features */}
+      {/* Head - no facial features */}
       <Circle cx={cx} cy={HEAD_CY} r={HEAD_R} stroke={STROKE} strokeWidth={1.5} fill="none" />
       {/* Torso */}
       <Rect

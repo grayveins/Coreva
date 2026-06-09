@@ -1,5 +1,5 @@
 /**
- * Meal plans — coach uploads PDFs for clients (Trainerize-style).
+ * Meal plans - coach uploads PDFs for clients (Trainerize-style).
  * Bucket: meal-plans   Path: <client_id>/<timestamp>_<filename>.pdf
  * Metadata in public.meal_plans.
  */

@@ -4,7 +4,7 @@
  * Fetches all historical sets for a single exercise (by name) for the
  * current user, grouped into sessions ordered most-recent first.
  *
- * Used by the in-flow ExerciseHistorySheet — the user taps an exercise
+ * Used by the in-flow ExerciseHistorySheet - the user taps an exercise
  * name during an active workout and we show their chronological log
  * with an estimated 1RM hero, a metric chart, and per-session sets.
  */
@@ -129,7 +129,7 @@ export function useExerciseHistory(
 
     (async () => {
       // Note: PostgREST refuses ".order()" against deeply nested foreign
-      // relationships. Fetch unordered and sort client-side after grouping —
+      // relationships. Fetch unordered and sort client-side after grouping -
       // the dataset is bounded (one user × one exercise) so this is cheap.
       const { data, error } = await supabase
         .from("workout_sets")

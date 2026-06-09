@@ -644,7 +644,7 @@ type ExerciseInfoProps = {
 import { EXERCISE_BY_NAME } from "@/lib/workout/exercises/library";
 
 /**
- * Get video info for an exercise — reads directly from the exercise library.
+ * Get video info for an exercise - reads directly from the exercise library.
  * No more hardcoded name→ID map.
  */
 function getExerciseVideo(exerciseName: string): { videoId: string; startTime: number } | null {

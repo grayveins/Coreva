@@ -1,5 +1,5 @@
 /**
- * useDailyFlag — local per-day boolean toggle backed by AsyncStorage.
+ * useDailyFlag - local per-day boolean toggle backed by AsyncStorage.
  *
  * Used for self-tracked things ("I hit my macros today") that don't need
  * to round-trip the DB. Keys are scoped by user_id so test accounts /
@@ -8,7 +8,7 @@
  *
  * Key shape: `dailyFlag:<userId>:<name>:<ymd>`
  *
- * If userId is null/undefined the hook is inert — hydrates as false, toggle
+ * If userId is null/undefined the hook is inert - hydrates as false, toggle
  * is a no-op. Callers should fold this into their normal "userId resolved
  * yet?" gating.
  *

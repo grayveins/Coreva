@@ -1,5 +1,5 @@
 /**
- * ExerciseCardNew — Minimal flat exercise card
+ * ExerciseCardNew - Minimal flat exercise card
  * Always expanded, no collapsible, no gradient bars.
  * Hevy/Trainerize hybrid: exercise name, set table, action chips.
  */
@@ -33,7 +33,7 @@ type ExerciseCardNewProps = {
   onSetChange: (setId: string, field: "weight" | "reps", value: string) => void;
   onSwapExercise?: () => void;
   onShowInfo?: () => void;
-  /** Tap-on-name handler — opens the ExerciseHistorySheet. */
+  /** Tap-on-name handler - opens the ExerciseHistorySheet. */
   onShowHistory?: () => void;
   onAddSet?: () => void;
   /** Per-set delete via swipe. Refused at the action layer when the set

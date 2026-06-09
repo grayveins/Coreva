@@ -1,9 +1,9 @@
 /**
  * InlineRestTimer
  * Renders inline between exercises during rest periods.
- * No popup/modal — stays in the scroll flow.
+ * No popup/modal - stays in the scroll flow.
  *
- * Research: Inline timers outperform modal timers for gym UX —
+ * Research: Inline timers outperform modal timers for gym UX -
  * users want to scroll, check notes, and review during rest.
  * Color shifts green→yellow→red as time runs down (urgency psychology).
  */

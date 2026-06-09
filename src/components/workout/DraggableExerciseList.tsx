@@ -36,7 +36,7 @@ import { AddExerciseButton } from "./AddExerciseButton";
 type ThemeColors = ReturnType<typeof useTheme>["colors"];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ReorderItemRow — a single draggable card in reorder mode
+// ReorderItemRow - a single draggable card in reorder mode
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ReorderItemRow({
@@ -66,7 +66,7 @@ function ReorderItemRow({
         },
       ]}
     >
-      {/* Drag handle — press & hold, then drag to relocate */}
+      {/* Drag handle - press & hold, then drag to relocate */}
       <Pressable
         onLongPress={drag}
         delayLongPress={140}
@@ -143,7 +143,7 @@ export function DraggableExerciseList({ renderExercise }: Props) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={0}
     >
-      {/* Reorder toolbar — only shown when 2+ exercises */}
+      {/* Reorder toolbar - only shown when 2+ exercises */}
       {exercises.length > 1 && (
         <View style={[styles.reorderBar, { borderBottomColor: colors.border }]}>
           <Pressable onPress={toggleReorderMode} style={styles.reorderBtn} hitSlop={8}>

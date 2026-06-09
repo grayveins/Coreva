@@ -1,5 +1,5 @@
 /**
- * MuscleChips — small monochrome pills listing muscle groups for an exercise.
+ * MuscleChips - small monochrome pills listing muscle groups for an exercise.
  * Used on the pre-workout preview and on the active-workout exercise card.
  *
  * Accepts either:
@@ -18,7 +18,7 @@ import { MUSCLE_DISPLAY_NAMES } from "@/lib/workout/exercises/muscleMap";
 
 type Props = {
   muscles: string[] | undefined | null;
-  /** Cap chip count — leftover collapsed into "+N" suffix chip. */
+  /** Cap chip count - leftover collapsed into "+N" suffix chip. */
   max?: number;
 };
 

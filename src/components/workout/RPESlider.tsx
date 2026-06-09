@@ -166,7 +166,7 @@ export const RPESlider: React.FC<RPESliderProps> = ({
           allowFontScaling={false}
           style={[styles.selectedDescriptor, { color: colors.textSecondary }]}
         >
-          RPE {value} — {RPE_DESCRIPTORS[value]}
+          RPE {value} - {RPE_DESCRIPTORS[value]}
         </Text>
       )}
     </View>

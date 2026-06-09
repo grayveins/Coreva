@@ -1,5 +1,5 @@
 /**
- * HabitRow — Trainerize-style toggle for a coach-assigned habit.
+ * HabitRow - Trainerize-style toggle for a coach-assigned habit.
  * Monochrome, no flash, no pulse. Title + checkbox only.
  */
 

@@ -1,5 +1,5 @@
 /**
- * Error Boundary — catches render crashes and shows a recovery screen
+ * Error Boundary - catches render crashes and shows a recovery screen
  * instead of white-screening the entire app.
  */
 
@@ -11,7 +11,7 @@ type Props = {
   children: React.ReactNode;
   /** What to show in the error screen (e.g. "Home", "Workout") */
   label?: string;
-  /** Called when user taps "Go Back" — typically router.back() */
+  /** Called when user taps "Go Back" - typically router.back() */
   onReset?: () => void;
 };
 

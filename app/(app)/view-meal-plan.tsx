@@ -5,7 +5,7 @@
  * sees the bare `<project-ref>.supabase.co` URL that SFSafariViewController
  * otherwise exposes. Header is our own chrome (chevron-back + plan title).
  *
- * The signed URL is regenerated on this screen — we don't pass it through
+ * The signed URL is regenerated on this screen - we don't pass it through
  * the navigation stack, only the storage path + title.
  */
 
@@ -88,7 +88,7 @@ export default function ViewMealPlanScreen() {
           // No JavaScript needed; disabling cuts the attack surface.
           javaScriptEnabled={false}
           domStorageEnabled={false}
-          // The URL bar is never shown — we own this chrome.
+          // The URL bar is never shown - we own this chrome.
           allowsBackForwardNavigationGestures={false}
         />
       )}

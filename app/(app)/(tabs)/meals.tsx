@@ -1,5 +1,5 @@
 /**
- * Nutrition tab — Cal AI / MacroFactor inspired layout, monochrome.
+ * Nutrition tab - Cal AI / MacroFactor inspired layout, monochrome.
  *
  * Surfaces only data we have today (coach-set targets + binary "hit goal"
  * flag + meal-plan PDFs). Visual scaffolding for future food-logging.
@@ -67,7 +67,7 @@ export default function MealsScreen() {
 
   const today = todayLocalISO();
   const macroFlag = useDailyFlag("macros", today, userId);
-  // Today's actual intake — fed by useHealthKit's foreground sync via
+  // Today's actual intake - fed by useHealthKit's foreground sync via
   // the daily_nutrition table. Null when the user hasn't connected
   // HealthKit yet (or HealthKit returned nothing).
   const { data: todayIntake, refresh: refreshIntake } = useTodayNutrition(userId);
@@ -98,7 +98,7 @@ export default function MealsScreen() {
     if (planRes.data) setMealPlans(planRes.data);
     setIsCoach(coach);
 
-    // Count this week's macro hits — last 7 days inclusive. Scoped by
+    // Count this week's macro hits - last 7 days inclusive. Scoped by
     // user_id so a fresh account doesn't inherit prior accounts' flags.
     const userPrefix = dailyFlagPrefix(user.id, "macros");
     const macroKeys = (allKeys as readonly string[]).filter((k) =>
@@ -175,7 +175,7 @@ export default function MealsScreen() {
     }
     return {
       eyebrow: "calories",
-      value: macros?.calories ? macros.calories.toLocaleString() : "—",
+      value: macros?.calories ? macros.calories.toLocaleString() : "-",
       caption: "daily target",
       progress: macroFlag.on ? 1 : 0,
     };
@@ -209,7 +209,7 @@ export default function MealsScreen() {
           <MealsSkeleton />
         ) : (
           <Animated.View entering={FadeIn.duration(220)}>
-            {/* Hero ring — auto-tracks consumed vs target when HealthKit
+            {/* Hero ring - auto-tracks consumed vs target when HealthKit
                 feeds data; falls back to a tap-to-hit toggle otherwise. */}
             {macros ? (
               <View style={styles.heroBlock}>
@@ -282,7 +282,7 @@ export default function MealsScreen() {
               </View>
             )}
 
-            {/* MFP / Cronometer / Lose It bridge education — only when
+            {/* MFP / Cronometer / Lose It bridge education - only when
                 HealthKit has actually wired up; otherwise this card is
                 misleading because we can't read anything yet. */}
             {hasIntake && <MfpConnectCard />}
@@ -388,7 +388,7 @@ function MacroCard({
         allowFontScaling={false}
         style={[styles.macroValue, { color: colors.text }]}
       >
-        {hasConsumed ? Math.round(consumed!) : grams != null ? `${grams}` : "—"}
+        {hasConsumed ? Math.round(consumed!) : grams != null ? `${grams}` : "-"}
       </Text>
       <Text
         allowFontScaling={false}

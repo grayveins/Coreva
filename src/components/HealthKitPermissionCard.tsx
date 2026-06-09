@@ -6,7 +6,7 @@
  *   not_asked       → "Connect Apple Health" CTA → calls onConnect()
  *   likely_granted  → component renders nothing
  *   likely_denied   → "Open Settings" deep link (system Settings, not the
- *                     Health app — that's the only place the user can
+ *                     Health app - that's the only place the user can
  *                     re-grant scopes once denied)
  *   unsupported     → renders nothing (Android, simulator without HK)
  *
@@ -52,7 +52,7 @@ export function HealthKitPermissionCard({
   const handleOpenSettings = () => {
     hapticPress();
     Linking.openURL("app-settings:").catch(() => {
-      // No good fallback — silently swallow if iOS rejects the URL.
+      // No good fallback - silently swallow if iOS rejects the URL.
     });
   };
 
@@ -97,7 +97,7 @@ export function HealthKitPermissionCard({
     );
   }
 
-  // likely_denied — small dismissable nudge, not a full CTA.
+  // likely_denied - small dismissable nudge, not a full CTA.
   return (
     <View style={[styles.card, { backgroundColor: colors.bgSecondary }]}>
       <View style={[styles.iconWrap, { backgroundColor: colors.bg }]}>

@@ -1,5 +1,5 @@
 /**
- * Exercise picker — database-driven, single purpose: add an exercise to the
+ * Exercise picker - database-driven, single purpose: add an exercise to the
  * active workout. Reached from the "Add Exercise" button. Tap an exercise to
  * add it; long-press to peek coaching cues.
  */

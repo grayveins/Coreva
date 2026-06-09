@@ -1,5 +1,5 @@
 /**
- * Subscription stub — paywall removed for v1 coaching prototype.
+ * Subscription stub - paywall removed for v1 coaching prototype.
  * All users treated as pro.
  */
 

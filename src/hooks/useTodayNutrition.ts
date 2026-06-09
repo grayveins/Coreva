@@ -1,5 +1,5 @@
 /**
- * Today's nutrition intake — reads `daily_nutrition` from Supabase.
+ * Today's nutrition intake - reads `daily_nutrition` from Supabase.
  *
  * The Supabase row is fed by `useHealthKit` (foreground sync). This hook
  * is the read side: it stays in sync with whichever row HealthKit (or

@@ -1,8 +1,8 @@
 /**
- * StartWorkoutSheet — Trainerize-style "start a workout" bottom sheet.
+ * StartWorkoutSheet - Trainerize-style "start a workout" bottom sheet.
  *
  * Opened from the FAB. Lists the client's active-phase workouts (tap to
- * preview/start) plus an "Empty workout" option — instead of dumping the
+ * preview/start) plus an "Empty workout" option - instead of dumping the
  * user on the Workouts tab.
  */
 
@@ -64,7 +64,7 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
         setLoading(false);
         return;
       }
-      // All phases, active one first then by phase number — so a client can
+      // All phases, active one first then by phase number - so a client can
       // do any workout from the program on any day, not just today's routine.
       const phases = [...(p.program_phases ?? [])].sort(
         (a: any, b: any) => (a.phase_number ?? 0) - (b.phase_number ?? 0),
@@ -169,7 +169,7 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
                   </View>
                 ))}
 
-                {/* Empty workout — always available */}
+                {/* Empty workout - always available */}
                 <Pressable onPress={startEmpty} style={[styles.row, styles.emptyRow, { borderColor: colors.border }]}>
                   <View style={[styles.rowIcon, { backgroundColor: colors.bgSecondary }]}>
                     <Ionicons name="add" size={20} color={colors.text} />

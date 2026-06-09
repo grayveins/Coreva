@@ -132,7 +132,7 @@ export function useShareTrigger() {
           }
         }
 
-        // All rules passed — mark session shown
+        // All rules passed - mark session shown
         sessionShownRef.current = true;
 
         // Persist last-prompt timestamp and mark this event as shown
@@ -141,7 +141,7 @@ export function useShareTrigger() {
 
         return { shouldShow: true, ...copy, event };
       } catch {
-        // AsyncStorage failure — fail open (don't show)
+        // AsyncStorage failure - fail open (don't show)
         return noShow;
       }
     },
@@ -167,7 +167,7 @@ export function useShareTrigger() {
   );
 
   /**
-   * Reset session flag — call at app foreground if needed.
+   * Reset session flag - call at app foreground if needed.
    */
   const resetSession = useCallback(() => {
     sessionShownRef.current = false;

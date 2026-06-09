@@ -55,17 +55,17 @@ export const RestTimer: React.FC<RestTimerProps> = ({
   const circumference = 2 * Math.PI * radius;
 
   // Derive the animated color from progress (0 → 1)
-  // 0.0–0.5: green → yellow, 0.5–0.8: yellow → red, 0.8–1.0: stays red
+  // 0.0-0.5: green → yellow, 0.5-0.8: yellow → red, 0.8-1.0: stays red
   const timerColor = useDerivedValue(() => {
     if (progress.value <= 0.5) {
-      // Green → Yellow (100%–50% remaining)
+      // Green → Yellow (100%-50% remaining)
       return interpolateColor(
         progress.value,
         [0, 0.5],
         [COLOR_GREEN, COLOR_YELLOW]
       );
     }
-    // Yellow → Red (50%–20% remaining)
+    // Yellow → Red (50%-20% remaining)
     return interpolateColor(
       progress.value,
       [0.5, 0.8],

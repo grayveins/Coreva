@@ -3,12 +3,12 @@
  * Comprehensive, beautiful progress analytics for workout geeks.
  *
  * Sections:
- * 1. Key Lifts — e1RM cards for the big 4 with trend %
- * 2. Weekly Volume — bar chart + this week vs avg + trend
- * 3. Sets Per Muscle Group — weekly set count per muscle (the metric hypertrophy lifters obsess over)
- * 4. Muscle Map — body heatmap showing training distribution
- * 5. Muscle Balance — horizontal bar breakdown
- * 6. Workout Stats — avg duration, total sessions, total volume, consistency %
+ * 1. Key Lifts - e1RM cards for the big 4 with trend %
+ * 2. Weekly Volume - bar chart + this week vs avg + trend
+ * 3. Sets Per Muscle Group - weekly set count per muscle (the metric hypertrophy lifters obsess over)
+ * 4. Muscle Map - body heatmap showing training distribution
+ * 5. Muscle Balance - horizontal bar breakdown
+ * 6. Workout Stats - avg duration, total sessions, total volume, consistency %
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -134,7 +134,7 @@ const LiftCard: React.FC<{
           )}
         </>
       ) : (
-        <Text allowFontScaling={false} style={[styles.liftNoData, { color: colors.textMuted }]}>—</Text>
+        <Text allowFontScaling={false} style={[styles.liftNoData, { color: colors.textMuted }]}>-</Text>
       )}
     </Pressable>
   );
@@ -314,8 +314,8 @@ export default function AnalyticsScreen() {
         {totalSessions > 0 && (
           <Animated.View entering={FadeInDown.duration(250)} style={styles.statsRow}>
             <Stat label="Workouts" value={String(totalSessions)} colors={colors} />
-            <Stat label="Avg Duration" value={avgDuration > 0 ? `${avgDuration}m` : "—"} colors={colors} />
-            <Stat label="Total Volume" value={totalLifetimeVolume > 0 ? fmtVol(totalLifetimeVolume) : "—"} colors={colors} />
+            <Stat label="Avg Duration" value={avgDuration > 0 ? `${avgDuration}m` : "-"} colors={colors} />
+            <Stat label="Total Volume" value={totalLifetimeVolume > 0 ? fmtVol(totalLifetimeVolume) : "-"} colors={colors} />
             {consistency !== null && (
               <Stat label="Consistency" value={`${consistency}%`} colors={colors} />
             )}
@@ -323,7 +323,7 @@ export default function AnalyticsScreen() {
         )}
 
         {/* ================================================================ */}
-        {/* 2. STRENGTH PROGRESS — e1RM cards for the big 4                  */}
+        {/* 2. STRENGTH PROGRESS - e1RM cards for the big 4                  */}
         {/* ================================================================ */}
         <Text allowFontScaling={false} style={[styles.section, { color: colors.text }]}>
           Strength Progress
@@ -337,7 +337,7 @@ export default function AnalyticsScreen() {
         </View>
 
         {/* ================================================================ */}
-        {/* 3. WEEKLY VOLUME — chart + stats                                 */}
+        {/* 3. WEEKLY VOLUME - chart + stats                                 */}
         {/* ================================================================ */}
         <Animated.View entering={FadeInDown.delay(200).duration(300)} style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.cardRow}>
@@ -382,7 +382,7 @@ export default function AnalyticsScreen() {
         </Animated.View>
 
         {/* ================================================================ */}
-        {/* 4. SETS PER MUSCLE — volume landmarks (MEV/MAV/MRV)              */}
+        {/* 4. SETS PER MUSCLE - volume landmarks (MEV/MAV/MRV)              */}
         {/* ================================================================ */}
         {!summaryLoading && setsPerMuscle.length > 0 && (
           <Animated.View entering={FadeInDown.delay(280).duration(300)} style={[styles.card, { backgroundColor: colors.card }]}>
@@ -445,7 +445,7 @@ export default function AnalyticsScreen() {
         )}
 
         {/* ================================================================ */}
-        {/* 5. MUSCLE MAP — body heatmap                                     */}
+        {/* 5. MUSCLE MAP - body heatmap                                     */}
         {/* ================================================================ */}
         {!summaryLoading && muscleMapData.length > 0 && (
           <Animated.View entering={FadeInDown.delay(360).duration(300)} style={[styles.card, { backgroundColor: colors.card }]}>
@@ -460,7 +460,7 @@ export default function AnalyticsScreen() {
         )}
 
         {/* ================================================================ */}
-        {/* 6. MUSCLE BALANCE — horizontal bar breakdown                     */}
+        {/* 6. MUSCLE BALANCE - horizontal bar breakdown                     */}
         {/* ================================================================ */}
         {!summaryLoading && musclePercentages.length > 0 && (
           <Animated.View entering={FadeInDown.delay(420).duration(300)} style={[styles.card, { backgroundColor: colors.card }]}>
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   rangePill: { paddingHorizontal: 18, paddingVertical: 7, borderRadius: 999 },
   rangeText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
 
-  // Overall stats — 2x2 grid instead of cramped single row
+  // Overall stats - 2x2 grid instead of cramped single row
   statsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 },
   statBox: { width: (SW - layout.screenPaddingHorizontal * 2 - 8) / 2, borderRadius: 12, padding: 12, alignItems: "center" },
   statValue: { fontSize: 20, fontFamily: "Inter_600SemiBold" },

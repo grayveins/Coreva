@@ -1,5 +1,5 @@
 /**
- * ActiveWorkoutMiniBar — Hevy-style persistent active-workout pill.
+ * ActiveWorkoutMiniBar - Hevy-style persistent active-workout pill.
  * Mounted globally inside (app) so a workout survives swipe-out from
  * the active modal, tab navigation, and app backgrounding. Tap the pill
  * (or chevron) to re-expand the active screen; tap the trash to discard
@@ -32,7 +32,7 @@ export function ActiveWorkoutMiniBar() {
 
   // No pathname guard: the workout modal already covers this layout
   // visually when open, so leaving the bar mounted lets it reveal
-  // naturally as the modal slides down — no pop-in delay.
+  // naturally as the modal slides down - no pop-in delay.
   if (!state.isActive) return null;
 
   const currentExercise =
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: spacing.base,
     right: spacing.base,
-    // Sits above the tab bar — RN tabs are ~88px on iOS w/ home indicator.
+    // Sits above the tab bar - RN tabs are ~88px on iOS w/ home indicator.
     bottom: 96,
     flexDirection: "row",
     alignItems: "center",

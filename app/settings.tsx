@@ -1,5 +1,5 @@
 /**
- * Settings Screen — Clean, minimal
+ * Settings Screen - Clean, minimal
  */
 
 import React, { useState } from "react";
@@ -72,7 +72,7 @@ export default function SettingsScreen() {
       Linking.openURL("app-settings:").catch(() => {});
       return;
     }
-    // likely_granted — deep link to Apple Health → Sources where the user
+    // likely_granted - deep link to Apple Health → Sources where the user
     // can adjust per-scope sharing. Fall back to system Settings if the
     // deep link is unavailable (older iOS or simulators).
     Linking.openURL("x-apple-health://Sources/").catch(() => {
@@ -84,7 +84,7 @@ export default function SettingsScreen() {
     hkPermissionState === "likely_granted"
       ? "Connected"
       : hkPermissionState === "likely_denied"
-        ? "Off — open Settings"
+        ? "Off - open Settings"
         : "Not connected";
 
   const handleSignOut = async () => {
@@ -150,7 +150,7 @@ export default function SettingsScreen() {
               </View>
               <View style={styles.upgradeText}>
                 <Text allowFontScaling={false} style={[styles.upgradeTitle, { color: colors.text }]}>
-                  {isOnTrial ? `Pro Trial — ${daysRemaining}d left` : "Upgrade to Pro"}
+                  {isOnTrial ? `Pro Trial - ${daysRemaining}d left` : "Upgrade to Pro"}
                 </Text>
                 <Text allowFontScaling={false} style={[styles.upgradeSub, { color: colors.textMuted }]}>
                   {isOnTrial ? "Keep unlimited access" : "Unlimited workouts, full history & more"}

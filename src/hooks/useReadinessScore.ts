@@ -95,13 +95,13 @@ const LEVEL_CONFIG: Record<ReadinessLevel, {
   good: {
     label: "Good Readiness",
     icon: "battery-full-outline",
-    suggestion: "Train as planned — you're ready to go",
+    suggestion: "Train as planned - you're ready to go",
     colorKey: "primary",
   },
   peak: {
     label: "Peak Readiness",
     icon: "flash-outline",
-    suggestion: "Push harder today — add volume or intensity",
+    suggestion: "Push harder today - add volume or intensity",
     colorKey: "gold",
   },
 };
@@ -111,28 +111,28 @@ const LEVEL_CONFIG: Record<ReadinessLevel, {
 // =============================================================================
 
 function getSleepAdjustment(hours: number): { impact: number; detail: string } {
-  if (hours < 5) return { impact: -25, detail: `${hours.toFixed(1)}h sleep — severely under-recovered` };
-  if (hours < 6) return { impact: -15, detail: `${hours.toFixed(1)}h sleep — below minimum` };
-  if (hours < 7) return { impact: -5, detail: `${hours.toFixed(1)}h sleep — slightly low` };
-  if (hours <= 8) return { impact: 5, detail: `${hours.toFixed(1)}h sleep — optimal range` };
-  if (hours <= 9) return { impact: 10, detail: `${hours.toFixed(1)}h sleep — excellent recovery` };
-  return { impact: 5, detail: `${hours.toFixed(1)}h sleep — extended rest` };
+  if (hours < 5) return { impact: -25, detail: `${hours.toFixed(1)}h sleep - severely under-recovered` };
+  if (hours < 6) return { impact: -15, detail: `${hours.toFixed(1)}h sleep - below minimum` };
+  if (hours < 7) return { impact: -5, detail: `${hours.toFixed(1)}h sleep - slightly low` };
+  if (hours <= 8) return { impact: 5, detail: `${hours.toFixed(1)}h sleep - optimal range` };
+  if (hours <= 9) return { impact: 10, detail: `${hours.toFixed(1)}h sleep - excellent recovery` };
+  return { impact: 5, detail: `${hours.toFixed(1)}h sleep - extended rest` };
 }
 
 function getRHRAdjustment(current: number, baseline: number): { impact: number; detail: string } {
   const pctDiff = ((current - baseline) / baseline) * 100;
-  if (pctDiff > 10) return { impact: -15, detail: `RHR ${current}bpm — ${Math.round(pctDiff)}% above baseline` };
-  if (pctDiff > 5) return { impact: -8, detail: `RHR ${current}bpm — slightly elevated` };
-  if (pctDiff < -5) return { impact: 5, detail: `RHR ${current}bpm — below baseline (good)` };
-  return { impact: 0, detail: `RHR ${current}bpm — normal range` };
+  if (pctDiff > 10) return { impact: -15, detail: `RHR ${current}bpm - ${Math.round(pctDiff)}% above baseline` };
+  if (pctDiff > 5) return { impact: -8, detail: `RHR ${current}bpm - slightly elevated` };
+  if (pctDiff < -5) return { impact: 5, detail: `RHR ${current}bpm - below baseline (good)` };
+  return { impact: 0, detail: `RHR ${current}bpm - normal range` };
 }
 
 function getHRVAdjustment(current: number, baseline: number): { impact: number; detail: string } {
   const pctDiff = ((current - baseline) / baseline) * 100;
-  if (pctDiff < -20) return { impact: -15, detail: `HRV ${current}ms — significantly suppressed` };
-  if (pctDiff < -10) return { impact: -8, detail: `HRV ${current}ms — below baseline` };
-  if (pctDiff > 10) return { impact: 8, detail: `HRV ${current}ms — above baseline (recovered)` };
-  return { impact: 0, detail: `HRV ${current}ms — normal range` };
+  if (pctDiff < -20) return { impact: -15, detail: `HRV ${current}ms - significantly suppressed` };
+  if (pctDiff < -10) return { impact: -8, detail: `HRV ${current}ms - below baseline` };
+  if (pctDiff > 10) return { impact: 8, detail: `HRV ${current}ms - above baseline (recovered)` };
+  return { impact: 0, detail: `HRV ${current}ms - normal range` };
 }
 
 function getTrainingLoadAdjustment(
@@ -150,10 +150,10 @@ function getTrainingLoadAdjustment(
   );
 
   if (workedOutYesterday && workedOutTwoDaysAgo) {
-    return { impact: -10, detail: "Trained 2 days in a row — accumulated fatigue" };
+    return { impact: -10, detail: "Trained 2 days in a row - accumulated fatigue" };
   }
   if (workedOutYesterday) {
-    return { impact: -5, detail: "Trained yesterday — mild fatigue" };
+    return { impact: -5, detail: "Trained yesterday - mild fatigue" };
   }
 
   // Check how many rest days
@@ -162,7 +162,7 @@ function getTrainingLoadAdjustment(
     : null;
 
   if (!lastWorkout) {
-    return { impact: 10, detail: "No recent workouts — fully rested" };
+    return { impact: 10, detail: "No recent workouts - fully rested" };
   }
 
   const daysSinceLastWorkout = Math.floor(
@@ -170,10 +170,10 @@ function getTrainingLoadAdjustment(
   );
 
   if (daysSinceLastWorkout >= 2) {
-    return { impact: 10, detail: `${daysSinceLastWorkout} rest days — well recovered` };
+    return { impact: 10, detail: `${daysSinceLastWorkout} rest days - well recovered` };
   }
 
-  return { impact: 5, detail: "1 rest day — good recovery" };
+  return { impact: 5, detail: "1 rest day - good recovery" };
 }
 
 function getReadinessLevel(score: number): ReadinessLevel {
@@ -341,7 +341,7 @@ export function useReadinessScore(
         icon: LEVEL_CONFIG.good.icon,
         label: LEVEL_CONFIG.good.label,
         suggestion: LEVEL_CONFIG.good.suggestion,
-        factors: [{ name: "Error", impact: 0, detail: "Could not calculate — using default" }],
+        factors: [{ name: "Error", impact: 0, detail: "Could not calculate - using default" }],
         loading: false,
       });
     }

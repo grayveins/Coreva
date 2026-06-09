@@ -1,9 +1,9 @@
 /**
- * CalorieRing — minimalist circular progress ring with centered hero text.
+ * CalorieRing - minimalist circular progress ring with centered hero text.
  *
  * Pure visual: parent supplies the value/label and the 0..1 progress.
- * Monochrome — track color = colors.border, fill = colors.text. No gradients,
- * no rounded caps that look "designed" — just a clean stroke that meets the
+ * Monochrome - track color = colors.border, fill = colors.text. No gradients,
+ * no rounded caps that look "designed" - just a clean stroke that meets the
  * Cal AI / Linear quality bar.
  */
 
@@ -17,7 +17,7 @@ type Props = {
   size?: number;
   /** Stroke thickness. */
   strokeWidth?: number;
-  /** 0..1 — fraction of the ring filled. Clamped. */
+  /** 0..1 - fraction of the ring filled. Clamped. */
   progress: number;
   /** Big number in the center (e.g. "2,800"). */
   value: string;
@@ -53,7 +53,7 @@ export const CalorieRing: React.FC<Props> = ({
           strokeWidth={strokeWidth}
           fill="none"
         />
-        {/* Fill — rotated -90deg so it grows from 12 o'clock */}
+        {/* Fill - rotated -90deg so it grows from 12 o'clock */}
         {clamped > 0 && (
           <Circle
             cx={size / 2}

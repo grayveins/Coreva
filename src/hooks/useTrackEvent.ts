@@ -21,7 +21,7 @@ export type TrackableEvent =
 
 /**
  * Sends a single event row to user_events.
- * Intentionally not awaited by callers — fire and forget.
+ * Intentionally not awaited by callers - fire and forget.
  */
 async function sendEvent(
   userId: string,
@@ -35,7 +35,7 @@ async function sendEvent(
       metadata,
     });
   } catch (err) {
-    // Silently swallow — tracking should never crash the app
+    // Silently swallow - tracking should never crash the app
     if (__DEV__) {
       console.warn("[useTrackEvent] failed to send event:", event, err);
     }
@@ -46,12 +46,12 @@ export function useTrackEvent(userId: string | null) {
   const appOpenedAt = useRef<number>(Date.now());
 
   /**
-   * Generic track function — call from anywhere in the app.
+   * Generic track function - call from anywhere in the app.
    */
   const track = useCallback(
     (event: string, metadata?: Record<string, unknown>) => {
       if (!userId) return;
-      // Fire and forget — no await
+      // Fire and forget - no await
       sendEvent(userId, event, metadata);
     },
     [userId]

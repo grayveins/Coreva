@@ -38,7 +38,7 @@ export function usePreviousWorkout(userId: string | null, exerciseNames: string[
     }
 
     try {
-      // PostgREST refuses ".order()" through deeply nested foreign tables —
+      // PostgREST refuses ".order()" through deeply nested foreign tables -
       // it errors with "failed to parse order". Fetch unordered and pick
       // the most-recent session per exercise client-side.
       const { data, error } = await supabase

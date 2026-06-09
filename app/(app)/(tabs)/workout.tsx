@@ -71,7 +71,7 @@ export default function WorkoutScreen() {
         .limit(1)
         .maybeSingle(),
       fetchScheduledMap(userId, today, windowEnd),
-      // Today's completed session — drives the TODAY hero CTA state.
+      // Today's completed session - drives the TODAY hero CTA state.
       supabase
         .from("workout_sessions")
         .select("id, started_at")
@@ -91,7 +91,7 @@ export default function WorkoutScreen() {
       setWorkouts([]);
       setTodayWorkout(null);
       setTodayIsRest(false);
-      // Keep todaySessionId — even without a program, a logged session
+      // Keep todaySessionId - even without a program, a logged session
       // for today is still meaningful (empty workouts, etc.).
       setInitialLoading(false);
       return;
@@ -172,7 +172,7 @@ export default function WorkoutScreen() {
 
   const openWorkoutDetail = (workout: PhaseWorkout) => {
     hapticPress();
-    // Open the workout for today (no weekday backfill — the program preview
+    // Open the workout for today (no weekday backfill - the program preview
     // is day-agnostic; the session is attributed to the day it's logged).
     router.push({
       pathname: "/(workout)/program-detail",
@@ -268,7 +268,7 @@ export default function WorkoutScreen() {
             </Pressable>
           </View>
         ) : (
-          /* No program or no today workout — show a clear start CTA */
+          /* No program or no today workout - show a clear start CTA */
           <Pressable
             onPress={startEmptyWorkout}
             style={[styles.todayCard, { backgroundColor: colors.bgSecondary }]}
@@ -291,7 +291,7 @@ export default function WorkoutScreen() {
           </Pressable>
         )}
 
-        {/* Program Workouts — the phase's workouts, day-agnostic */}
+        {/* Program Workouts - the phase's workouts, day-agnostic */}
         {programName && workouts.length > 0 && (
           <View>
             <View style={styles.sectionHeader}>

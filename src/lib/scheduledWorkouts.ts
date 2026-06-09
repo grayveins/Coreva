@@ -39,7 +39,7 @@ export async function fetchScheduledMap(
   toDate: Date,
 ): Promise<ScheduledMap> {
   // The mobile `supabase` singleton isn't typed with <Database> yet
-  // (Sprint A part 2 — pending PR), so .from() returns `never`. Cast
+  // (Sprint A part 2 - pending PR), so .from() returns `never`. Cast
   // the result rather than wiring Database here, keeping this PR
   // scoped to the schedule read-switch.
   const { data } = await supabase
@@ -76,7 +76,7 @@ function addLocalDays(from: Date, n: number): Date {
 /**
  * Walk a date window and collect the coach's actually-scheduled training days
  * (skipping rest days and dates with no assignment). This reflects the real
- * cadence — every-other-day, 3x/week, whatever the coach set — instead of
+ * cadence - every-other-day, 3x/week, whatever the coach set - instead of
  * mapping phase_workouts onto weekdays by `day_number`.
  *
  * Returns up to `max` sessions in chronological order. Empty when the client
@@ -110,7 +110,7 @@ export function resolveDay(args: {
   /** All phase_workouts across all phases of the active program, keyed
    *  by id. Lets a coach schedule a workout from a different phase. */
   workoutsById: Map<string, WorkoutLite>;
-  /** day_number-based fallback list — typically the active phase only. */
+  /** day_number-based fallback list - typically the active phase only. */
   activePhaseWorkouts: WorkoutLite[];
 }): ResolvedDay {
   const key = isoDate(args.date);

@@ -50,7 +50,7 @@ export default function ProgramDetailScreen() {
   const totalSets = exercises.reduce((s, e) => s + (e.sets || 0), 0);
   const estMinutes = Math.round(totalSets * 2.5);
 
-  // Aggregate the unique muscles trained across the session — our stand-in
+  // Aggregate the unique muscles trained across the session - our stand-in
   // for Trainerize's equipment chips (we don't carry equipment data).
   const targetMuscles = useMemo(() => {
     const seen = new Set<string>();
@@ -79,7 +79,7 @@ export default function ProgramDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Minimal top bar — just a back affordance, hero lives in scroll */}
+      {/* Minimal top bar - just a back affordance, hero lives in scroll */}
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
@@ -98,7 +98,7 @@ export default function ProgramDetailScreen() {
             {workoutName}
           </Text>
 
-          {/* Stats strip — icon-led, est. time first (Trainerize-style) */}
+          {/* Stats strip - icon-led, est. time first (Trainerize-style) */}
           <View style={styles.statsRow}>
             <Stat icon="time-outline" value={`${estMinutes}`} label="Est. min" colors={colors} />
             <View style={styles.statDivider} />

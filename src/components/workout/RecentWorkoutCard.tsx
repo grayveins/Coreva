@@ -1,5 +1,5 @@
 /**
- * RecentWorkoutCard — Hevy-inspired
+ * RecentWorkoutCard - Hevy-inspired
  *
  * Compact card with date badge, exercise list, and meta pills.
  * Tap to re-run the workout.

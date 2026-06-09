@@ -3,7 +3,7 @@
  * the latest weight / body fat samples; upserts the body metrics into
  * `body_stats` so the rest of the app reads from one source.
  *
- * Cache + refetch strategy mirrors `app/(app)/(tabs)/index.tsx:170-176` —
+ * Cache + refetch strategy mirrors `app/(app)/(tabs)/index.tsx:170-176` -
  * a 30-second `lastFetchedAt` ref-gated `useFocusEffect`.
  *
  * Auth-status heuristic: iOS hides whether READ access was denied. We
@@ -31,7 +31,7 @@ import {
 
 const ASKED_KEY = "@adpt/healthkit/asked";
 const STALE_MS = 30_000;
-/** Don't auto-fill `body_stats` from samples older than this — Health
+/** Don't auto-fill `body_stats` from samples older than this - Health
  * sometimes returns last-week's weigh-in as "most recent" if the user
  * hasn't logged in a while, and we don't want to plant stale rows in DB. */
 const RECENT_SAMPLE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -48,7 +48,7 @@ export type HealthKitState = {
   bodyFat: number | null;
   steps: number | null;
   activeEnergy: number | null;
-  /** Today's intake — null when no nutrition data exists yet. */
+  /** Today's intake - null when no nutrition data exists yet. */
   nutrition: DailyNutrition | null;
   /** Force re-read from HealthKit + re-upsert to Supabase. */
   refresh: () => Promise<void>;
@@ -76,7 +76,7 @@ export function useHealthKit(userId: string | null): HealthKitState {
   const [nutrition, setNutrition] = useState<DailyNutrition | null>(null);
 
   const lastFetchedAt = useRef(0);
-  // Avoid repeated upserts for the same (date, value) — the user may
+  // Avoid repeated upserts for the same (date, value) - the user may
   // refocus Home many times in a session and we don't want to spam
   // Supabase with no-op writes.
   const lastWeightUpsert = useRef<{ date: string; value: number } | null>(null);
@@ -154,7 +154,7 @@ export function useHealthKit(userId: string | null): HealthKitState {
   const sync = useCallback(async () => {
     if (!supported) return;
 
-    // Pull body, activity, and nutrition in parallel — no inter-dependency.
+    // Pull body, activity, and nutrition in parallel - no inter-dependency.
     const [w, f, s, k, n] = await Promise.all([
       getLatestBodyMassKg(),
       getLatestBodyFatPct(),
@@ -172,7 +172,7 @@ export function useHealthKit(userId: string | null): HealthKitState {
     // Permission heuristic: any non-null reading means we have at least
     // one of the read scopes granted. All-null after the user was prompted
     // is our best "denied / no data" signal. Nutrition counts toward
-    // "likely_granted" too — MFP users may have only nutrition flowing.
+    // "likely_granted" too - MFP users may have only nutrition flowing.
     const asked = (await AsyncStorage.getItem(ASKED_KEY)) === "1";
     const anySignal =
       w != null ||
@@ -191,7 +191,7 @@ export function useHealthKit(userId: string | null): HealthKitState {
     if (!userId) return;
     const today = isoDate(new Date());
 
-    // Body-metric upserts — gated on (a) fresh sample (within 7 days)
+    // Body-metric upserts - gated on (a) fresh sample (within 7 days)
     // and (b) value/date differing from last write.
     if (w) {
       const ageMs = Date.now() - w.date.getTime();
@@ -216,12 +216,12 @@ export function useHealthKit(userId: string | null): HealthKitState {
       }
     }
 
-    // Activity upsert — only when we have at least one non-null signal.
+    // Activity upsert - only when we have at least one non-null signal.
     if (s != null || k != null) {
       await upsertActivity(userId, today, { steps: s, activeEnergy: k });
     }
 
-    // Nutrition upsert — only when HealthKit returned anything.
+    // Nutrition upsert - only when HealthKit returned anything.
     if (n) {
       await upsertNutrition(userId, today, n);
     }
@@ -238,7 +238,7 @@ export function useHealthKit(userId: string | null): HealthKitState {
     refresh();
   }, [supported, userId, refresh]);
 
-  // Refocus refetch — same 30s gate as the Home tab's data hook.
+  // Refocus refetch - same 30s gate as the Home tab's data hook.
   useFocusEffect(
     useCallback(() => {
       if (!supported) return;
@@ -251,7 +251,7 @@ export function useHealthKit(userId: string | null): HealthKitState {
   const requestAuth = useCallback(async () => {
     if (!supported) return;
     await requestHealthKitAuthorization();
-    // Mark "asked" regardless of outcome — iOS doesn't tell us if the
+    // Mark "asked" regardless of outcome - iOS doesn't tell us if the
     // user denied, and the system sheet only appears once per scope.
     await AsyncStorage.setItem(ASKED_KEY, "1");
     await refresh();

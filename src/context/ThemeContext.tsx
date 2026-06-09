@@ -1,5 +1,5 @@
 /**
- * Theme Context — single light theme (Cal AI inspired)
+ * Theme Context - single light theme (Cal AI inspired)
  * No dark mode in v1. useTheme() returns the same palette always.
  */
 

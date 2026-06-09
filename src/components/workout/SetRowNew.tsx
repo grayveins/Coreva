@@ -1,5 +1,5 @@
 /**
- * SetRowNew — Minimal set row (Hevy/Trainerize table style)
+ * SetRowNew - Minimal set row (Hevy/Trainerize table style)
  * Simple row: set# | previous | reps | weight | checkbox
  * Swipe left to delete (uncompleted sets only).
  */
@@ -80,15 +80,15 @@ export const SetRowNew: React.FC<SetRowNewProps> = ({
 
   const prevText = (previousWeight && previousReps)
     ? `${String(previousReps)} × ${String(previousWeight)}`
-    : "—";
+    : "-";
 
-  // Completed sets aren't deletable — Swipeable is bypassed entirely so
+  // Completed sets aren't deletable - Swipeable is bypassed entirely so
   // there's no flicker / no half-open state.
   const swipeEnabled = !!onDelete && !completed && !disabled;
 
   // Full-height transparent pane; the inner Pressable centers the icon
   // vertically against whatever the row resolves to. No background, no
-  // colored fill — the swipe gesture itself is the affordance.
+  // colored fill - the swipe gesture itself is the affordance.
   const renderRightActions = () => (
     <View style={styles.deleteAction}>
       <Pressable
@@ -123,7 +123,7 @@ export const SetRowNew: React.FC<SetRowNewProps> = ({
         {setNumber}
       </Text>
 
-      {/* Previous — tap to copy into current set's weight + reps. */}
+      {/* Previous - tap to copy into current set's weight + reps. */}
       <Pressable
         onPress={(e) => {
           // Stop propagation so tapping doesn't toggle the row's completion.
@@ -158,11 +158,11 @@ export const SetRowNew: React.FC<SetRowNewProps> = ({
         </Text>
       </Pressable>
 
-      {/* Reps input — placed before weight per coach preference (rep target drives the set) */}
+      {/* Reps input - placed before weight per coach preference (rep target drives the set) */}
       <TextInput
         value={reps}
         onChangeText={onRepsChange}
-        placeholder={previousReps ? String(previousReps) : "—"}
+        placeholder={previousReps ? String(previousReps) : "-"}
         placeholderTextColor={colors.inputPlaceholder}
         keyboardType="numeric"
         style={[
@@ -182,7 +182,7 @@ export const SetRowNew: React.FC<SetRowNewProps> = ({
       <TextInput
         value={weight}
         onChangeText={onWeightChange}
-        placeholder={previousWeight ? String(previousWeight) : "—"}
+        placeholder={previousWeight ? String(previousWeight) : "-"}
         placeholderTextColor={colors.inputPlaceholder}
         keyboardType="numeric"
         style={[

@@ -326,7 +326,7 @@ export const StrengthChartNew: React.FC<StrengthChartProps> = ({
             allowFontScaling={false}
             style={[styles.headerValue, { color: colors.text }]}
           >
-            {current?.e1rm ?? "—"}{" "}
+            {current?.e1rm ?? "-"}{" "}
             <Text style={[styles.headerUnit, { color: colors.textMuted }]}>
               {unit}
             </Text>
