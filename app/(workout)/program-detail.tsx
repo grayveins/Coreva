@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTheme } from "@/src/context/ThemeContext";
 import { spacing, radius } from "@/src/theme";
 import { hapticPress } from "@/src/animations/feedback/haptics";
@@ -20,8 +21,15 @@ type Exercise = {
   primary_muscles?: string[];
 };
 
+function musclesOf(ex: Exercise): string[] {
+  if (ex.primary_muscles && ex.primary_muscles.length > 0) return ex.primary_muscles;
+  if (ex.muscleGroup) return ex.muscleGroup.split(/[\/,]+/).map((s) => s.trim()).filter(Boolean);
+  return [];
+}
+
 export default function ProgramDetailScreen() {
   const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const params = useLocalSearchParams<{
     name?: string;
     exercises?: string;
@@ -43,6 +51,20 @@ export default function ProgramDetailScreen() {
   const totalSets = exercises.reduce((s, e) => s + (e.sets || 0), 0);
   const estMinutes = Math.round(totalSets * 2.5);
 
+  // Aggregate the unique muscles trained across the session — our stand-in
+  // for Trainerize's equipment chips (we don't carry equipment data).
+  const targetMuscles = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const ex of exercises) {
+      for (const m of musclesOf(ex)) {
+        const key = m.toLowerCase();
+        if (!seen.has(key)) { seen.add(key); out.push(m); }
+      }
+    }
+    return out;
+  }, [exercises]);
+
   const startWorkout = () => {
     hapticPress();
     router.push({
@@ -57,94 +79,95 @@ export default function ProgramDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      {/* Minimal top bar — just a back affordance, hero lives in scroll */}
+      <View style={styles.topBar}>
+        <Pressable onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <View style={styles.headerCenter}>
-          <Text allowFontScaling={false} style={[styles.headerTitle, { color: colors.text }]}>
-            {workoutName}
-          </Text>
-          <Text allowFontScaling={false} style={[styles.headerSub, { color: colors.textMuted }]}>
-            {exercises.length} exercises · ~{estMinutes} min
-          </Text>
-        </View>
-        <View style={{ width: 24 }} />
       </View>
 
-      {phaseName ? (
-        <Text allowFontScaling={false} style={[styles.phaseLabel, { color: colors.textMuted }]}>
-          {phaseName}{dayNumber ? ` · Day ${dayNumber}` : ""}
-        </Text>
-      ) : null}
-
-      {/* Exercise list */}
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {exercises.map((ex, i) => {
-          // Consolidated muscle list. Prefer the granular `primary_muscles`
-          // (typed) array; fall back to the freeform `muscleGroup` string,
-          // splitting on common separators so "glutes / hip extension"
-          // becomes two chips.
-          const muscles = ex.primary_muscles && ex.primary_muscles.length > 0
-            ? ex.primary_muscles
-            : (ex.muscleGroup ? ex.muscleGroup.split(/[\/,]+/).map(s => s.trim()).filter(Boolean) : []);
-          const metaBits: string[] = [];
-          metaBits.push(`${ex.sets} sets × ${ex.reps} reps`);
-          if (ex.rir != null) metaBits.push(`RIR ${ex.rir}`);
-          if (ex.rest_seconds) metaBits.push(`${ex.rest_seconds}s rest`);
-          const isLast = i === exercises.length - 1;
-          return (
-            <View
-              key={i}
-              style={[
-                styles.exerciseRow,
-                !isLast && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
-              ]}
-            >
-              <View style={[styles.exerciseNumber, { backgroundColor: colors.bgSecondary }]}>
-                <Text allowFontScaling={false} style={[styles.numberText, { color: colors.text }]}>
-                  {i + 1}
-                </Text>
-              </View>
-              <View style={styles.exerciseInfo}>
-                <Text allowFontScaling={false} style={[styles.exerciseName, { color: colors.text }]}>
-                  {ex.name || ex.exercise_name}
-                </Text>
-                <Text allowFontScaling={false} style={[styles.exerciseMeta, { color: colors.textMuted }]}>
-                  {metaBits.join(" · ")}
-                </Text>
-                {muscles.length > 0 && (
-                  <View style={styles.muscleRow}>
-                    <MuscleChips muscles={muscles} max={5} />
-                  </View>
-                )}
-                {ex.notes ? (
-                  <Text allowFontScaling={false} style={[styles.exerciseNotes, { color: colors.textSecondary }]}>
-                    {ex.notes}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-          );
-        })}
-
-        {exercises.length === 0 && (
-          <Text allowFontScaling={false} style={[styles.emptyText, { color: colors.textMuted }]}>
-            No exercises in this workout
+        <Animated.View entering={FadeInDown.duration(260)}>
+          {/* Hero */}
+          {phaseName ? (
+            <Text allowFontScaling={false} style={styles.phaseLabel}>
+              {phaseName}{dayNumber ? ` · DAY ${dayNumber}` : ""}
+            </Text>
+          ) : null}
+          <Text allowFontScaling={false} style={styles.title}>
+            {workoutName}
           </Text>
-        )}
+
+          {/* Stats strip */}
+          <View style={styles.statsRow}>
+            <Stat value={String(exercises.length)} label="Exercises" colors={colors} />
+            <View style={styles.statDivider} />
+            <Stat value={String(totalSets)} label="Sets" colors={colors} />
+            <View style={styles.statDivider} />
+            <Stat value={`~${estMinutes}`} label="Min" colors={colors} />
+          </View>
+
+          {/* Targets */}
+          {targetMuscles.length > 0 && (
+            <View style={styles.targets}>
+              <Text allowFontScaling={false} style={styles.sectionLabel}>TARGETS</Text>
+              <MuscleChips muscles={targetMuscles} max={8} />
+            </View>
+          )}
+
+          {/* Exercise list */}
+          <Text allowFontScaling={false} style={[styles.sectionLabel, { marginTop: spacing.xl }]}>
+            EXERCISES
+          </Text>
+          {exercises.map((ex, i) => {
+            const setN = ex.sets || 0;
+            const metaBits: string[] = [];
+            metaBits.push(`${setN} set${setN === 1 ? "" : "s"}${ex.reps ? ` · ${ex.reps} reps` : ""}`);
+            if (ex.rest_seconds) metaBits.push(`${ex.rest_seconds}s rest`);
+            const isLast = i === exercises.length - 1;
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.exerciseRow,
+                  !isLast && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
+                ]}
+              >
+                <View style={styles.exerciseNumber}>
+                  <Text allowFontScaling={false} style={styles.numberText}>{i + 1}</Text>
+                </View>
+                <View style={styles.exerciseInfo}>
+                  <Text allowFontScaling={false} style={styles.exerciseName} numberOfLines={1}>
+                    {ex.name || ex.exercise_name}
+                  </Text>
+                  <Text allowFontScaling={false} style={styles.exerciseMeta}>
+                    {metaBits.join(" · ")}
+                  </Text>
+                  {ex.notes ? (
+                    <Text allowFontScaling={false} style={styles.exerciseNotes} numberOfLines={2}>
+                      {ex.notes}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            );
+          })}
+
+          {exercises.length === 0 && (
+            <Text allowFontScaling={false} style={styles.emptyText}>
+              No exercises in this workout
+            </Text>
+          )}
+        </Animated.View>
       </ScrollView>
 
       {/* Start button */}
       {exercises.length > 0 && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border }]}>
-          <Pressable onPress={startWorkout} style={[styles.startButton, { backgroundColor: colors.text }]}>
+        <View style={styles.bottomBar}>
+          <Pressable onPress={startWorkout} style={styles.startButton}>
             <Ionicons name="play" size={18} color={colors.bg} />
-            <Text allowFontScaling={false} style={[styles.startText, { color: colors.bg }]}>
-              START WORKOUT
-            </Text>
+            <Text allowFontScaling={false} style={styles.startText}>Start Workout</Text>
           </Pressable>
         </View>
       )}
@@ -152,63 +175,108 @@ export default function ProgramDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-  },
-  headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold" },
-  headerSub: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
-  phaseLabel: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    textAlign: "center",
-    marginBottom: spacing.md,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  scroll: { paddingHorizontal: spacing.lg, paddingBottom: 120 },
-  exerciseRow: {
-    flexDirection: "row",
-    paddingVertical: spacing.base + 2,
-    gap: spacing.md,
-  },
-  exerciseNumber: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
-  },
-  numberText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-  exerciseInfo: { flex: 1, gap: 2 },
-  exerciseName: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
-  exerciseMeta: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  muscleRow: { marginTop: 6 },
-  exerciseNotes: { fontSize: 12, fontFamily: "Inter_400Regular", fontStyle: "italic", marginTop: 6 },
-  emptyText: { textAlign: "center", marginTop: 40, fontSize: 14, fontFamily: "Inter_400Regular" },
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: spacing.lg,
-    paddingBottom: 34,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  startButton: {
-    height: 52,
-    borderRadius: radius.md,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-  },
-  startText: { fontSize: 16, fontFamily: "Inter_600SemiBold", letterSpacing: 0.5 },
-});
+function Stat({ value, label, colors }: { value: string; label: string; colors: ReturnType<typeof useTheme>["colors"] }) {
+  return (
+    <View style={{ flex: 1, alignItems: "center" }}>
+      <Text allowFontScaling={false} style={{ fontSize: 24, fontFamily: "Inter_700Bold", color: colors.text, letterSpacing: -0.5 }}>
+        {value}
+      </Text>
+      <Text allowFontScaling={false} style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.textMuted, letterSpacing: 0.6, textTransform: "uppercase", marginTop: 2 }}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg },
+    topBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xs,
+    },
+    scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: 130 },
+
+    // Hero
+    phaseLabel: {
+      fontSize: 12,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.textMuted,
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+      marginBottom: 8,
+    },
+    title: {
+      fontSize: 30,
+      fontFamily: "Inter_700Bold",
+      color: colors.text,
+      letterSpacing: -0.6,
+    },
+
+    // Stats
+    statsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.xl,
+      paddingVertical: spacing.base,
+      borderRadius: radius.lg,
+      backgroundColor: colors.bgSecondary,
+    },
+    statDivider: { width: StyleSheet.hairlineWidth, height: 28, backgroundColor: colors.border },
+
+    // Sections
+    sectionLabel: {
+      fontSize: 11,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.textMuted,
+      letterSpacing: 0.8,
+      textTransform: "uppercase",
+      marginBottom: spacing.md,
+    },
+    targets: { marginTop: spacing.xl },
+
+    // Exercise rows
+    exerciseRow: { flexDirection: "row", paddingVertical: spacing.base, gap: spacing.md },
+    exerciseNumber: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.bgSecondary,
+      marginTop: 1,
+    },
+    numberText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.text },
+    exerciseInfo: { flex: 1, gap: 3 },
+    exerciseName: { fontSize: 16, fontFamily: "Inter_600SemiBold", color: colors.text },
+    exerciseMeta: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.textMuted },
+    exerciseNotes: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.textSecondary, marginTop: 4, lineHeight: 17 },
+    emptyText: { textAlign: "center", marginTop: 40, fontSize: 14, fontFamily: "Inter_400Regular", color: colors.textMuted },
+
+    // Start
+    bottomBar: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: 34,
+      backgroundColor: colors.bg,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    startButton: {
+      height: 56,
+      borderRadius: radius.pill,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.sm,
+      backgroundColor: colors.text,
+    },
+    startText: { fontSize: 16, fontFamily: "Inter_600SemiBold", color: colors.bg, letterSpacing: 0.3 },
+  });
