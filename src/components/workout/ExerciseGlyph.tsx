@@ -6,8 +6,8 @@
 
 import React from "react";
 import { View, StyleSheet, type ViewStyle } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "@/src/context/ThemeContext";
+import { EquipmentIcon } from "./EquipmentIcon";
 
 type Props = {
   equipment?: string | null;
@@ -19,23 +19,7 @@ type Props = {
 
 export function ExerciseGlyph({ equipment, size = 38, tint, style }: Props) {
   const { colors } = useTheme();
-  const e = (equipment ?? "").toLowerCase();
-  const iconSize = Math.round(size * 0.5);
-  const color = colors.text;
-
-  let icon: React.ReactNode;
-  if (e.includes("dumbbell")) {
-    icon = <MaterialCommunityIcons name="dumbbell" size={iconSize} color={color} />;
-  } else if (e.includes("kettle")) {
-    icon = <MaterialCommunityIcons name="kettlebell" size={iconSize} color={color} />;
-  } else if (e.includes("body") || e.includes("bodyweight")) {
-    icon = <Ionicons name="body-outline" size={iconSize} color={color} />;
-  } else if (e.includes("band")) {
-    icon = <MaterialCommunityIcons name="vector-line" size={iconSize} color={color} />;
-  } else {
-    // barbell, machine, cable, smith, other → generic barbell
-    icon = <Ionicons name="barbell-outline" size={iconSize} color={color} />;
-  }
+  const iconSize = Math.round(size * 0.56);
 
   return (
     <View
@@ -45,7 +29,7 @@ export function ExerciseGlyph({ equipment, size = 38, tint, style }: Props) {
         style,
       ]}
     >
-      {icon}
+      <EquipmentIcon equipment={equipment} size={iconSize} color={colors.text} />
     </View>
   );
 }
