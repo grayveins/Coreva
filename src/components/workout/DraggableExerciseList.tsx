@@ -1,15 +1,14 @@
 /**
  * DraggableExerciseList
- * Renders exercises with wiggle-animation reorder mode (iOS home screen style).
- * Tap "Reorder" to enter edit mode: cards wiggle and show ↑/↓ controls.
- * Groups consecutive exercises with the same groupId into SupersetGroups.
+ * Normal mode: grouped view (supersets) with inline rest timers + add button.
+ * Reorder mode: a real drag-to-relocate list (react-native-reorderable-list).
+ * Tap "Reorder" to enter; long-press a card's handle and drag to relocate.
  */
 
 import React, {
   useMemo,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from "react";
 import {
@@ -21,11 +20,11 @@ import {
   Text,
   Pressable,
 } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
+import ReorderableList, {
+  useReorderableDrag,
+  useIsActive,
+  type ReorderableListReorderEvent,
+} from "react-native-reorderable-list";
 import { Ionicons } from "@expo/vector-icons";
 import { useActiveWorkout, type ActiveExercise } from "@/src/context/ActiveWorkoutContext";
 import { useTheme } from "@/src/context/ThemeContext";
@@ -34,27 +33,53 @@ import { SupersetGroup } from "./SupersetGroup";
 import { InlineRestTimer } from "./InlineRestTimer";
 import { AddExerciseButton } from "./AddExerciseButton";
 
+type ThemeColors = ReturnType<typeof useTheme>["colors"];
+
 // ─────────────────────────────────────────────────────────────────────────────
-// ReorderCard — calm "lift" when in reorder mode (no jittery wiggle)
+// ReorderItemRow — a single draggable card in reorder mode
 // ─────────────────────────────────────────────────────────────────────────────
 
-type ReorderCardProps = {
-  isEditing: boolean;
-  children: ReactNode;
-};
+function ReorderItemRow({
+  exercise,
+  index,
+  renderExercise,
+  colors,
+}: {
+  exercise: ActiveExercise;
+  index: number;
+  renderExercise: (exercise: ActiveExercise, index: number) => ReactNode;
+  colors: ThemeColors;
+}) {
+  const drag = useReorderableDrag();
+  const isActive = useIsActive();
 
-function ReorderCard({ isEditing, children }: ReorderCardProps) {
-  const scale = useSharedValue(1);
-
-  useEffect(() => {
-    scale.value = withTiming(isEditing ? 0.985 : 1, { duration: 150 });
-  }, [isEditing, scale]);
-
-  const style = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return <Animated.View style={style}>{children}</Animated.View>;
+  return (
+    <View
+      style={[
+        styles.reorderRow,
+        isActive && {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.16,
+          shadowRadius: 12,
+          elevation: 8,
+        },
+      ]}
+    >
+      {/* Drag handle — press & hold, then drag to relocate */}
+      <Pressable
+        onLongPress={drag}
+        delayLongPress={140}
+        hitSlop={8}
+        style={styles.dragHandle}
+        accessibilityRole="button"
+        accessibilityLabel={`Reorder ${exercise.name}`}
+      >
+        <Ionicons name="reorder-two-outline" size={24} color={colors.textMuted} />
+      </Pressable>
+      <View style={styles.reorderCardWrap}>{renderExercise(exercise, index)}</View>
+    </View>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,26 +120,13 @@ export function DraggableExerciseList({ renderExercise }: Props) {
     return result;
   }, [exercises]);
 
-  const handleMoveUp = useCallback(
-    (exerciseId: string) => {
-      const idx = exercises.findIndex((e) => e.id === exerciseId);
-      if (idx > 0) {
-        hapticPress();
-        actions.reorderExercises(idx, idx - 1);
-      }
+  const handleReorder = useCallback(
+    ({ from, to }: ReorderableListReorderEvent) => {
+      if (from === to) return;
+      hapticPress();
+      actions.reorderExercises(from, to);
     },
-    [exercises, actions],
-  );
-
-  const handleMoveDown = useCallback(
-    (exerciseId: string) => {
-      const idx = exercises.findIndex((e) => e.id === exerciseId);
-      if (idx < exercises.length - 1) {
-        hapticPress();
-        actions.reorderExercises(idx, idx + 1);
-      }
-    },
-    [exercises, actions],
+    [actions],
   );
 
   const toggleReorderMode = useCallback(() => {
@@ -153,56 +165,32 @@ export function DraggableExerciseList({ renderExercise }: Props) {
         </View>
       )}
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        // Disable scroll while reordering so cards don't jump around
-        scrollEnabled={!isReorderMode}
-      >
-        {isReorderMode ? (
-          // ── Reorder mode: flat list, wiggling cards with ↑/↓ controls ──
-          exercises.map((exercise, index) => (
-            <ReorderCard key={exercise.id} isEditing>
-              <View style={styles.reorderRow}>
-                {/* Exercise card */}
-                <View style={styles.reorderCardWrap}>
-                  {renderExercise(exercise, index)}
-                </View>
-
-                {/* Up / Handle / Down column */}
-                <View
-                  style={[
-                    styles.reorderControls,
-                    { backgroundColor: colors.bgSecondary, borderColor: colors.border },
-                  ]}
-                >
-                  <Pressable
-                    onPress={() => handleMoveUp(exercise.id)}
-                    disabled={index === 0}
-                    hitSlop={6}
-                    style={{ opacity: index === 0 ? 0.25 : 1 }}
-                  >
-                    <Ionicons name="chevron-up" size={20} color={colors.text} />
-                  </Pressable>
-
-                  <Ionicons name="menu" size={16} color={colors.textMuted} />
-
-                  <Pressable
-                    onPress={() => handleMoveDown(exercise.id)}
-                    disabled={index === exercises.length - 1}
-                    hitSlop={6}
-                    style={{ opacity: index === exercises.length - 1 ? 0.25 : 1 }}
-                  >
-                    <Ionicons name="chevron-down" size={20} color={colors.text} />
-                  </Pressable>
-                </View>
-              </View>
-            </ReorderCard>
-          ))
-        ) : (
-          // ── Normal mode: grouped view with superset support ──
-          groups.map((group) => {
+      {isReorderMode ? (
+        // ── Reorder mode: real drag-to-relocate list ──
+        <ReorderableList
+          data={exercises}
+          keyExtractor={(item) => item.id}
+          onReorder={handleReorder}
+          renderItem={({ item, index }) => (
+            <ReorderItemRow
+              exercise={item}
+              index={index}
+              renderExercise={renderExercise}
+              colors={colors}
+            />
+          )}
+          style={styles.flex}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* ── Normal mode: grouped view with superset support ── */}
+          {groups.map((group) => {
             if (group.groupId && group.exercises.length >= 2) {
               const rendered = group.exercises.map((exercise) => {
                 const idx = globalIndex++;
@@ -236,11 +224,11 @@ export function DraggableExerciseList({ renderExercise }: Props) {
                 </React.Fragment>
               );
             });
-          })
-        )}
+          })}
 
-        {!isReorderMode && <AddExerciseButton />}
-      </ScrollView>
+          <AddExerciseButton />
+        </ScrollView>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -273,24 +261,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
-    gap: 8,
+    gap: 6,
   },
-  reorderCardWrap: {
-    flex: 1,
-  },
-  reorderControls: {
-    width: 36,
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 10,
+  dragHandle: {
+    width: 30,
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    // Subtle elevation so it floats above the card
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 2,
+    justifyContent: "center",
+    alignSelf: "stretch",
   },
+  reorderCardWrap: { flex: 1 },
 });
