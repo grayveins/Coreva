@@ -288,16 +288,16 @@ export default function WorkoutScreen() {
                 openWorkoutDetail(todayWorkout);
               }
             }}
-            style={[styles.todayCard, { backgroundColor: colors.text }]}
+            style={[styles.todayCard, { backgroundColor: colors.primary }]}
           >
-            <Text allowFontScaling={false} style={[styles.todayLabel, { color: colors.bgSecondary }]}>
+            <Text allowFontScaling={false} style={[styles.todayLabel, { color: "rgba(255,255,255,0.75)" }]}>
               TODAY
             </Text>
-            <Text allowFontScaling={false} style={[styles.todayName, { color: colors.bg }]}>
+            <Text allowFontScaling={false} style={[styles.todayName, { color: colors.textOnPrimary }]}>
               {todayWorkout.name}
             </Text>
             {todayWorkout.exercises?.length > 0 && (
-              <Text allowFontScaling={false} numberOfLines={1} style={[styles.todayExercises, { color: colors.bgSecondary }]}>
+              <Text allowFontScaling={false} numberOfLines={1} style={[styles.todayExercises, { color: "rgba(255,255,255,0.75)" }]}>
                 {todayWorkout.exercises.map((e: any) => e.name || e.exercise_name).join(", ")}
               </Text>
             )}
@@ -389,7 +389,7 @@ export default function WorkoutScreen() {
                     onPress={() => openUpcoming(session)}
                     style={[
                       styles.workoutCard,
-                      { backgroundColor: today ? colors.text : colors.bgSecondary },
+                      { backgroundColor: today ? colors.primary : colors.bgSecondary },
                     ]}
                   >
                     <View style={[styles.dayPill, { backgroundColor: today ? "rgba(255,255,255,0.15)" : colors.border }]}>
@@ -425,7 +425,7 @@ export default function WorkoutScreen() {
                   onPress={() => openWorkoutDetail(workout)}
                   style={[
                     styles.workoutCard,
-                    { backgroundColor: isAssignedToday ? colors.text : colors.bgSecondary },
+                    { backgroundColor: isAssignedToday ? colors.primary : colors.bgSecondary },
                   ]}
                 >
                   {/* Day pill */}
