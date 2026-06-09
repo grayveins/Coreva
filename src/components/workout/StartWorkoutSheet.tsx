@@ -25,6 +25,7 @@ import { supabase } from "@/lib/supabase";
 import { hapticPress } from "@/src/animations/feedback/haptics";
 
 type PhaseWorkout = { id: string; name: string; exercises: any[] };
+type PhaseSection = { phaseId: string; phaseName: string; workouts: PhaseWorkout[] };
 
 type Props = {
   visible: boolean;
@@ -34,9 +35,7 @@ type Props = {
 export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [programName, setProgramName] = useState<string | null>(null);
-  const [phaseName, setPhaseName] = useState<string | null>(null);
-  const [workouts, setWorkouts] = useState<PhaseWorkout[]>([]);
+  const [sections, setSections] = useState<PhaseSection[]>([]);
 
   useEffect(() => {
     if (!visible) return;
@@ -46,14 +45,13 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (cancelled) return;
       if (!user) {
-        setProgramName(null);
-        setWorkouts([]);
+        setSections([]);
         setLoading(false);
         return;
       }
       const { data: program } = await supabase
         .from("coaching_programs")
-        .select("name, program_phases(status, phase_workouts(id, name, exercises))")
+        .select("name, program_phases(id, name, phase_number, status, phase_workouts(id, name, exercises))")
         .eq("client_id", user.id)
         .eq("status", "active")
         .order("created_at", { ascending: false })
@@ -62,17 +60,26 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
       if (cancelled) return;
       const p = program as any;
       if (!p) {
-        setProgramName(null);
-        setPhaseName(null);
-        setWorkouts([]);
+        setSections([]);
         setLoading(false);
         return;
       }
-      const phases = p.program_phases ?? [];
-      const active = phases.find((ph: any) => ph.status === "active") ?? phases[0];
-      setProgramName(p.name ?? null);
-      setPhaseName(active?.name ?? null);
-      setWorkouts(active?.phase_workouts ?? []);
+      // All phases, active one first then by phase number — so a client can
+      // do any workout from the program on any day, not just today's routine.
+      const phases = [...(p.program_phases ?? [])].sort(
+        (a: any, b: any) => (a.phase_number ?? 0) - (b.phase_number ?? 0),
+      );
+      const active = phases.find((ph: any) => ph.status === "active");
+      const ordered = active ? [active, ...phases.filter((ph: any) => ph !== active)] : phases;
+      setSections(
+        ordered
+          .filter((ph: any) => (ph.phase_workouts ?? []).length > 0)
+          .map((ph: any) => ({
+            phaseId: ph.id,
+            phaseName: ph.name,
+            workouts: ph.phase_workouts ?? [],
+          })),
+      );
       setLoading(false);
     })();
     return () => {
@@ -86,7 +93,7 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
     router.push({ pathname: "/(workout)/active", params: { name: "Workout", sourceType: "empty" } });
   };
 
-  const openWorkout = (w: PhaseWorkout) => {
+  const openWorkout = (w: PhaseWorkout, phaseName: string) => {
     onClose();
     hapticPress();
     router.push({
@@ -94,7 +101,7 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
       params: {
         name: w.name,
         exercises: JSON.stringify(w.exercises || []),
-        phaseName: phaseName || "",
+        phaseName,
       },
     });
   };
@@ -123,20 +130,20 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
                 contentContainerStyle={{ paddingBottom: spacing.sm }}
                 showsVerticalScrollIndicator={false}
               >
-                {workouts.length > 0 && (
-                  <>
-                    {(programName || phaseName) && (
+                {sections.map((sec) => (
+                  <View key={sec.phaseId}>
+                    {sec.phaseName ? (
                       <Text allowFontScaling={false} style={[styles.sectionLabel, { color: colors.textMuted }]}>
-                        {[programName, phaseName].filter(Boolean).join(" · ").toUpperCase()}
+                        {sec.phaseName.toUpperCase()}
                       </Text>
-                    )}
-                    {workouts.map((w) => {
+                    ) : null}
+                    {sec.workouts.map((w) => {
                       const exerciseCount = w.exercises?.length || 0;
                       const totalSets = (w.exercises || []).reduce((s: number, e: any) => s + (e.sets || 0), 0);
                       return (
                         <Pressable
                           key={w.id}
-                          onPress={() => openWorkout(w)}
+                          onPress={() => openWorkout(w, sec.phaseName)}
                           style={[styles.row, { backgroundColor: colors.bgSecondary }]}
                         >
                           <View style={[styles.rowIcon, { backgroundColor: colors.bg }]}>
@@ -159,8 +166,8 @@ export const StartWorkoutSheet: React.FC<Props> = ({ visible, onClose }) => {
                         </Pressable>
                       );
                     })}
-                  </>
-                )}
+                  </View>
+                ))}
 
                 {/* Empty workout — always available */}
                 <Pressable onPress={startEmpty} style={[styles.row, styles.emptyRow, { borderColor: colors.border }]}>
