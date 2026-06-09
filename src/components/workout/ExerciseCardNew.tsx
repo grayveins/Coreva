@@ -11,7 +11,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/context/ThemeContext";
 import { spacing, radius } from "@/src/theme";
 import { SetRowNew } from "./SetRowNew";
-import { MuscleChips } from "./MuscleChips";
 import { hapticPress } from "@/src/animations/feedback/haptics";
 
 export type SetData = {
@@ -46,7 +45,6 @@ type ExerciseCardNewProps = {
 
 export const ExerciseCardNew: React.FC<ExerciseCardNewProps> = ({
   name,
-  muscles,
   sets,
   targetReps,
   previousSets = [],
@@ -97,11 +95,6 @@ export const ExerciseCardNew: React.FC<ExerciseCardNewProps> = ({
               .filter(Boolean)
               .join(" · ")}
           </Text>
-          {muscles && muscles.length > 0 && (
-            <View style={styles.muscleRow}>
-              <MuscleChips muscles={muscles} />
-            </View>
-          )}
         </Pressable>
         {currentPRWeight != null && currentPRWeight > 0 && (
           <View style={[styles.prBadge, { borderColor: colors.border }]}>
@@ -220,13 +213,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    padding: spacing.base,
-    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
   },
-  headerLeft: { flex: 1, gap: 2 },
+  headerLeft: { flex: 1, gap: 1 },
   exerciseName: { fontSize: 16, fontWeight: "600" },
   meta: { fontSize: 13 },
-  muscleRow: { marginTop: 6 },
   prBadge: {
     borderWidth: 1,
     borderRadius: radius.sm,
@@ -238,7 +231,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     paddingHorizontal: spacing.base,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.sm,
   },
   chip: {
     flexDirection: "row",

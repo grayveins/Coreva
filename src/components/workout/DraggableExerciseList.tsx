@@ -24,10 +24,7 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withRepeat,
-  withSequence,
   withTiming,
-  withDelay,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useActiveWorkout, type ActiveExercise } from "@/src/context/ActiveWorkoutContext";
@@ -38,39 +35,23 @@ import { InlineRestTimer } from "./InlineRestTimer";
 import { AddExerciseButton } from "./AddExerciseButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WiggleCard — wraps a card with iOS-style rotation wiggle when editing
+// ReorderCard — calm "lift" when in reorder mode (no jittery wiggle)
 // ─────────────────────────────────────────────────────────────────────────────
 
-type WiggleCardProps = {
+type ReorderCardProps = {
   isEditing: boolean;
-  /** Stagger delay in ms so cards don't all start wiggling in sync. */
-  phaseDelay: number;
   children: ReactNode;
 };
 
-function WiggleCard({ isEditing, phaseDelay, children }: WiggleCardProps) {
-  const rot = useSharedValue(0);
+function ReorderCard({ isEditing, children }: ReorderCardProps) {
+  const scale = useSharedValue(1);
 
   useEffect(() => {
-    if (isEditing) {
-      rot.value = withDelay(
-        phaseDelay,
-        withRepeat(
-          withSequence(
-            withTiming(-1.8, { duration: 85 }),
-            withTiming(1.8, { duration: 85 }),
-          ),
-          -1,
-          true,
-        ),
-      );
-    } else {
-      rot.value = withTiming(0, { duration: 120 });
-    }
-  }, [isEditing, phaseDelay]);
+    scale.value = withTiming(isEditing ? 0.985 : 1, { duration: 150 });
+  }, [isEditing, scale]);
 
   const style = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rot.value}deg` }],
+    transform: [{ scale: scale.value }],
   }));
 
   return <Animated.View style={style}>{children}</Animated.View>;
@@ -182,11 +163,7 @@ export function DraggableExerciseList({ renderExercise }: Props) {
         {isReorderMode ? (
           // ── Reorder mode: flat list, wiggling cards with ↑/↓ controls ──
           exercises.map((exercise, index) => (
-            <WiggleCard
-              key={exercise.id}
-              isEditing
-              phaseDelay={index * 35}
-            >
+            <ReorderCard key={exercise.id} isEditing>
               <View style={styles.reorderRow}>
                 {/* Exercise card */}
                 <View style={styles.reorderCardWrap}>
@@ -221,7 +198,7 @@ export function DraggableExerciseList({ renderExercise }: Props) {
                   </Pressable>
                 </View>
               </View>
-            </WiggleCard>
+            </ReorderCard>
           ))
         ) : (
           // ── Normal mode: grouped view with superset support ──
