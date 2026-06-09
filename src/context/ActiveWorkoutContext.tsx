@@ -805,8 +805,10 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
               { id: `set-add-${seed}-1`, weight: "", reps: "", completed: false, isWarmup: false, isPR: false },
               { id: `set-add-${seed}-2`, weight: "", reps: "", completed: false, isWarmup: false, isPR: false },
             ],
-            targetReps: "8-12",
-            targetRIR: 2,
+            // Freestyle adds carry no coach prescription — leave reps/RIR
+            // blank so the card shows just the set count, not a fake "8-12".
+            targetReps: "",
+            targetRIR: 0,
             notes: "",
             groupId: null,
             restTimerSeconds: 90,
