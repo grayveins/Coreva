@@ -49,7 +49,6 @@ export const ExerciseCardNew: React.FC<ExerciseCardNewProps> = ({
   muscles,
   sets,
   targetReps,
-  targetRIR,
   previousSets = [],
   currentPRWeight,
   onSetComplete,
@@ -91,7 +90,12 @@ export const ExerciseCardNew: React.FC<ExerciseCardNewProps> = ({
             allowFontScaling={false}
             style={[styles.meta, { color: colors.textMuted }]}
           >
-            {`Set ${completedSets} of ${totalSets} · ${targetReps || "8-12"} reps · RIR ${targetRIR ?? 2}`}
+            {[
+              `${completedSets} of ${totalSets} sets`,
+              targetReps ? `${targetReps} reps` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </Text>
           {muscles && muscles.length > 0 && (
             <View style={styles.muscleRow}>
