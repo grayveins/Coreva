@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { hapticPress } from "@/src/animations/feedback/haptics";
 import { spacing, radius } from "@/src/theme";
 import { WorkoutSkeleton } from "@/src/animations/components/SkeletonLoader";
+import { ExerciseGlyph } from "@/src/components/workout/ExerciseGlyph";
 import {
   fetchScheduledMap,
   resolveDay,
@@ -314,6 +315,7 @@ export default function WorkoutScreen() {
                   onPress={() => openWorkoutDetail(workout)}
                   style={[styles.workoutCard, { backgroundColor: colors.bgSecondary }]}
                 >
+                  <ExerciseGlyph size={40} tint={colors.bg} />
                   <View style={styles.workoutInfo}>
                     <Text allowFontScaling={false} style={[styles.workoutName, { color: colors.text }]}>
                       {workout.name}
