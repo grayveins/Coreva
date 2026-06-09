@@ -341,7 +341,6 @@ export default function WorkoutScreen() {
           </Text>
           <MoreRow icon="add-outline" label="Empty Workout" onPress={startEmptyWorkout} colors={colors} />
           <MoreRow icon="time-outline" label="Workout History" onPress={() => router.push("/(workout)/history")} colors={colors} />
-          <MoreRow icon="barbell-outline" label="Exercise Library" onPress={() => router.push("/(workout)/exercises")} colors={colors} />
         </View>
         </Animated.View>
         )}
