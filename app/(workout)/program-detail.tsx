@@ -40,7 +40,6 @@ export default function ProgramDetailScreen() {
 
   const workoutName = params.name || "Workout";
   const phaseName = params.phaseName || "";
-  const dayNumber = params.dayNumber || "";
 
   const exercises: Exercise[] = useMemo(() => {
     if (!params.exercises) return [];
@@ -92,7 +91,7 @@ export default function ProgramDetailScreen() {
           {/* Hero */}
           {phaseName ? (
             <Text allowFontScaling={false} style={styles.phaseLabel}>
-              {phaseName}{dayNumber ? ` · DAY ${dayNumber}` : ""}
+              {phaseName}
             </Text>
           ) : null}
           <Text allowFontScaling={false} style={styles.title}>
