@@ -16,13 +16,10 @@ import { supabase } from "@/lib/supabase";
 import { hapticPress } from "@/src/animations/feedback/haptics";
 import { spacing, radius } from "@/src/theme";
 import { WorkoutSkeleton } from "@/src/animations/components/SkeletonLoader";
-import { format, isToday, isTomorrow } from "date-fns";
 import {
   fetchScheduledMap,
   resolveDay,
-  collectUpcomingFromSchedule,
   type WorkoutLite,
-  type UpcomingSession,
 } from "@/src/lib/scheduledWorkouts";
 
 type PhaseWorkout = {
@@ -32,16 +29,6 @@ type PhaseWorkout = {
   exercises: any[];
 };
 
-// day_number 1=Mon … 7=Sun
-const DAY_NAMES: Record<number, string> = {
-  1: "Monday", 2: "Tuesday", 3: "Wednesday",
-  4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday",
-};
-const DAY_SHORT: Record<number, string> = {
-  1: "Mon", 2: "Tue", 3: "Wed",
-  4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun",
-};
-
 export default function WorkoutScreen() {
   const { colors } = useTheme();
   const [userId, setUserId] = useState<string | null>(null);
@@ -49,10 +36,6 @@ export default function WorkoutScreen() {
   const [programName, setProgramName] = useState<string | null>(null);
   const [phaseName, setPhaseName] = useState<string | null>(null);
   const [workouts, setWorkouts] = useState<PhaseWorkout[]>([]);
-  /** Real coach-scheduled training days (EOD / Nx week / whatever the coach
-   *  set). When present, the program list renders these dated sessions
-   *  instead of mapping phase_workouts onto weekdays. */
-  const [upcoming, setUpcoming] = useState<UpcomingSession[]>([]);
   const [todayWorkout, setTodayWorkout] = useState<PhaseWorkout | null>(null);
   const [todayIsRest, setTodayIsRest] = useState(false);
   /** id of today's completed workout_session, if one exists. Drives the
@@ -106,7 +89,6 @@ export default function WorkoutScreen() {
       setProgramName(null);
       setPhaseName(null);
       setWorkouts([]);
-      setUpcoming([]);
       setTodayWorkout(null);
       setTodayIsRest(false);
       // Keep todaySessionId — even without a program, a logged session
@@ -127,7 +109,6 @@ export default function WorkoutScreen() {
     if (!activePhase) {
       setPhaseName(null);
       setWorkouts([]);
-      setUpcoming([]);
       setTodayWorkout(null);
       setTodayIsRest(false);
       setInitialLoading(false);
@@ -146,17 +127,6 @@ export default function WorkoutScreen() {
     for (const ph of sortedPhases) {
       for (const w of (ph.phase_workouts ?? [])) byId.set(w.id, w as WorkoutLite);
     }
-
-    // Real coach-scheduled cadence for the lookahead window. Empty for
-    // programs that were never scheduled — the legacy weekly list renders.
-    setUpcoming(
-      collectUpcomingFromSchedule({
-        from: today,
-        days: SCHEDULE_WINDOW_DAYS,
-        scheduledByDate: schedMap,
-        workoutsById: byId,
-      }),
-    );
 
     const resolved = resolveDay({
       date: today,
@@ -200,42 +170,10 @@ export default function WorkoutScreen() {
     router.push({ pathname: "/(workout)/active", params: { name: "Workout", sourceType: "empty" } });
   };
 
-  // Open a specific coach-scheduled session, attributing it to its real
-  // calendar date (today/past backfills correctly; future stays live).
-  const openUpcoming = (session: UpcomingSession) => {
-    hapticPress();
-    const w = session.workout as PhaseWorkout;
-    router.push({
-      pathname: "/(workout)/program-detail",
-      params: {
-        name: w.name,
-        exercises: JSON.stringify(w.exercises || []),
-        phaseName: phaseName || "",
-        dayNumber: String(w.day_number),
-        sessionDate: session.iso,
-      },
-    });
-  };
-
   const openWorkoutDetail = (workout: PhaseWorkout) => {
     hapticPress();
-    // Map day_number (1..7 Mon..Sun) to the most recent calendar date for that
-    // weekday — so a Mon workout opened on Tue saves to yesterday, not today.
-    // Future days in the current week pass no sessionDate (defaults to today).
-    const today = new Date();
-    const todayDow = today.getDay() || 7;
-    const offset = todayDow - workout.day_number;
-    const sessionDate = offset >= 0
-      ? (() => {
-          const d = new Date(today);
-          d.setDate(today.getDate() - offset);
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, "0");
-          const dd = String(d.getDate()).padStart(2, "0");
-          return `${yyyy}-${mm}-${dd}`;
-        })()
-      : undefined;
-
+    // Open the workout for today (no weekday backfill — the program preview
+    // is day-agnostic; the session is attributed to the day it's logged).
     router.push({
       pathname: "/(workout)/program-detail",
       params: {
@@ -243,7 +181,6 @@ export default function WorkoutScreen() {
         exercises: JSON.stringify(workout.exercises || []),
         phaseName: phaseName || "",
         dayNumber: String(workout.day_number),
-        ...(sessionDate ? { sessionDate } : {}),
       },
     });
   };
@@ -354,8 +291,8 @@ export default function WorkoutScreen() {
           </Pressable>
         )}
 
-        {/* Program Workouts */}
-        {programName && (upcoming.length > 0 || workouts.length > 0) && (
+        {/* Program Workouts — the phase's workouts, day-agnostic */}
+        {programName && workouts.length > 0 && (
           <View>
             <View style={styles.sectionHeader}>
               <Text allowFontScaling={false} style={[styles.sectionTitle, { color: colors.text }]}>
@@ -368,88 +305,32 @@ export default function WorkoutScreen() {
               )}
             </View>
 
-            {/* Preferred: real coach-scheduled cadence (EOD, 3x/week, …) on
-                actual dates. Falls back to the legacy weekday list below for
-                programs that were never scheduled. */}
-            {upcoming.length > 0 ? (
-              upcoming.map((session) => {
-                const w = session.workout as PhaseWorkout;
-                const exercises = (w.exercises as any[]) || [];
-                const exerciseCount = exercises.length;
-                const totalSets = exercises.reduce((s: number, e: any) => s + (e.sets || 0), 0);
-                const today = isToday(session.date);
-                const dateLabel = today
-                  ? "Today"
-                  : isTomorrow(session.date)
-                    ? "Tomorrow"
-                    : format(session.date, "EEE, MMM d");
-                return (
-                  <Pressable
-                    key={session.iso}
-                    onPress={() => openUpcoming(session)}
-                    style={[
-                      styles.workoutCard,
-                      { backgroundColor: today ? colors.text : colors.bgSecondary },
-                    ]}
-                  >
-                    <View style={[styles.dayPill, { backgroundColor: today ? "rgba(255,255,255,0.15)" : colors.border }]}>
-                      <Text allowFontScaling={false} style={[styles.dayPillText, { color: today ? colors.bg : colors.textMuted }]}>
-                        {format(session.date, "EEE").toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={styles.workoutInfo}>
-                      <Text allowFontScaling={false} style={[styles.workoutName, { color: today ? colors.bg : colors.text }]}>
-                        {w.name}
-                      </Text>
-                      <Text allowFontScaling={false} style={[styles.workoutMeta, { color: today ? "rgba(255,255,255,0.65)" : colors.textMuted }]}>
-                        {dateLabel}{exerciseCount > 0 ? ` · ${exerciseCount} exercises` : ""}
-                        {totalSets > 0 ? ` · ${totalSets} sets` : ""}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={today ? colors.bg : colors.textMuted} />
-                  </Pressable>
-                );
-              })
-            ) : (
-            workouts.map((workout) => {
+            {workouts.map((workout) => {
               const exerciseCount = workout.exercises?.length || 0;
               const totalSets = (workout.exercises || []).reduce((s: number, e: any) => s + (e.sets || 0), 0);
-              const dayName = DAY_NAMES[workout.day_number] ?? `Day ${workout.day_number}`;
-              const dayShort = DAY_SHORT[workout.day_number];
-              // Highlight today's assigned workout
-              const todayDow = (new Date().getDay() || 7);
-              const isAssignedToday = workout.day_number === todayDow;
               return (
                 <Pressable
                   key={workout.id}
                   onPress={() => openWorkoutDetail(workout)}
-                  style={[
-                    styles.workoutCard,
-                    { backgroundColor: isAssignedToday ? colors.text : colors.bgSecondary },
-                  ]}
+                  style={[styles.workoutCard, { backgroundColor: colors.bgSecondary }]}
                 >
-                  {/* Day pill */}
-                  {dayShort && (
-                    <View style={[styles.dayPill, { backgroundColor: isAssignedToday ? "rgba(255,255,255,0.15)" : colors.border }]}>
-                      <Text allowFontScaling={false} style={[styles.dayPillText, { color: isAssignedToday ? colors.bg : colors.textMuted }]}>
-                        {dayShort}
-                      </Text>
-                    </View>
-                  )}
                   <View style={styles.workoutInfo}>
-                    <Text allowFontScaling={false} style={[styles.workoutName, { color: isAssignedToday ? colors.bg : colors.text }]}>
+                    <Text allowFontScaling={false} style={[styles.workoutName, { color: colors.text }]}>
                       {workout.name}
                     </Text>
-                    <Text allowFontScaling={false} style={[styles.workoutMeta, { color: isAssignedToday ? "rgba(255,255,255,0.65)" : colors.textMuted }]}>
-                      {dayName}{exerciseCount > 0 ? ` · ${exerciseCount} exercises` : ""}
-                      {totalSets > 0 ? ` · ${totalSets} sets` : ""}
-                    </Text>
+                    {(exerciseCount > 0 || totalSets > 0) && (
+                      <Text allowFontScaling={false} style={[styles.workoutMeta, { color: colors.textMuted }]}>
+                        {[
+                          exerciseCount > 0 ? `${exerciseCount} exercises` : null,
+                          totalSets > 0 ? `${totalSets} sets` : null,
+                        ].filter(Boolean).join(" · ")}
+                      </Text>
+                    )}
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color={isAssignedToday ? colors.bg : colors.textMuted} />
+                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                 </Pressable>
               );
-            })
-            )}
+            })}
           </View>
         )}
 
@@ -527,15 +408,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     gap: spacing.sm,
   },
-  dayPill: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  dayPillText: { fontSize: 11, fontWeight: "700" },
   workoutInfo: { flex: 1, gap: 2 },
   workoutName: { fontSize: 15, fontWeight: "600" },
   workoutMeta: { fontSize: 12 },
