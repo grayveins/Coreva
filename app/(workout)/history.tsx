@@ -28,6 +28,7 @@ import { ErrorState } from "@/src/components/ErrorState";
 import { HistorySkeleton } from "@/src/animations/components";
 import { useFeatureAccess } from "@/src/hooks/useSubscription";
 import UpgradePrompt from "@/src/components/UpgradePrompt";
+import { ExerciseGlyph } from "@/src/components/workout/ExerciseGlyph";
 
 type WorkoutSet = {
   id: string;
@@ -269,6 +270,7 @@ export default function WorkoutHistoryScreen() {
                           },
                         ]}
                       >
+                        <ExerciseGlyph size={36} style={{ marginRight: 12 }} />
                         <View style={styles.rowMain}>
                           <Text allowFontScaling={false} style={styles.rowTitle} numberOfLines={1}>
                             {w.title || "Workout"}

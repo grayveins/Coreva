@@ -21,6 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/context/ThemeContext";
 import { hapticPress, hapticSuccess } from "@/src/animations/feedback/haptics";
 import { useExercises, type DBExercise } from "@/src/hooks/useExercises";
+import { ExerciseGlyph } from "@/src/components/workout/ExerciseGlyph";
 import { spacing, radius } from "@/src/theme";
 
 export const ADD_EXERCISE_EVENT = "workout:addExercise";
@@ -49,6 +50,7 @@ const ExerciseRow = React.memo(function ExerciseRow({ ex, isExpanded, onPick, on
       onLongPress={() => onToggleExpand(ex.id)}
       style={[styles.exerciseRow, { borderBottomColor: colors.border }]}
     >
+      <ExerciseGlyph equipment={ex.equipment} size={40} />
       <View style={styles.exerciseMain}>
         <Text allowFontScaling={false} style={[styles.exerciseName, { color: colors.text }]}>
           {ex.name}
