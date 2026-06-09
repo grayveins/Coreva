@@ -1,24 +1,19 @@
 /**
  * ExerciseHistorySheet
  *
- * Bottom sheet that surfaces a single exercise's full history while the
- * user is mid-workout. Tap an exercise name in `(workout)/active.tsx`
- * to open it.
+ * Bottom sheet surfacing a single exercise's history mid-workout. Tap an
+ * exercise name in `(workout)/active.tsx` to open it.
  *
  * Layout (top → bottom):
- *   1. Hero numeral — best estimated 1RM, display-size (Cal-AI restraint).
- *   2. Metric toggle — 1RM Est. / Best Set Vol. / Heaviest Weight.
- *   3. Line chart — values over time for the selected metric.
- *   4. Chronological session list — each row = date + sets summary +
- *      coach/self notes preview.
- *   5. Sticky bottom CTA — "Use Last Workout" copies last session's
- *      sets into the current exercise.
+ *   1. "Personal best to beat" — Est. 1RM / Max weight / Best volume.
+ *   2. Trend — a clean bar sparkline of the selected metric over time.
+ *   3. Chronological session list.
+ *   4. Sticky CTA — "Use Last Workout" copies the last session's sets.
  */
 
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   Modal,
   Pressable,
   ScrollView,
@@ -27,7 +22,6 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LineChart } from "react-native-chart-kit";
 
 import { useTheme } from "@/src/context/ThemeContext";
 import { spacing, radius } from "@/src/theme";
@@ -49,8 +43,6 @@ type Props = {
    *  sets into the active workout state. */
   onUseLastWorkout?: (sets: { weight: number; reps: number }[]) => void;
 };
-
-const SCREEN_W = Dimensions.get("window").width;
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -101,59 +93,53 @@ export function ExerciseHistorySheet({
   const { colors } = useTheme();
   const [metric, setMetric] = useState<MetricKey>("oneRM");
 
-  const { loading, error, sessions, stats, refresh } = useExerciseHistory(
+  const { loading, error, sessions, refresh } = useExerciseHistory(
     userId,
     visible ? exerciseName : null
   );
 
-  const chartData = useMemo(() => {
-    // Oldest → newest for the chart, last 12 sessions max so the X axis
-    // stays legible on a phone.
-    const ordered = [...sessions].reverse().slice(-12);
-    const values = ordered.map((s) => metricForSession(s, metric));
-    return {
-      labels: ordered.map(() => ""), // hide X labels — date is in the list below
-      datasets: [{ data: values.length ? values : [0] }],
-    };
-  }, [sessions, metric]);
+  // Personal bests across all logged sessions.
+  const pbs = useMemo(() => {
+    let e1rm = 0, heaviest = 0, vol = 0;
+    for (const s of sessions) {
+      for (const set of s.sets) {
+        if (set.isWarmup) continue;
+        if (set.weight > heaviest) heaviest = set.weight;
+        const v = set.weight * set.reps;
+        if (v > vol) vol = v;
+        const e = brzycki1RM(set.weight, set.reps) ?? 0;
+        if (e > e1rm) e1rm = e;
+      }
+    }
+    return { e1rm: Math.round(e1rm), heaviest: Math.round(heaviest), vol: Math.round(vol) };
+  }, [sessions]);
+
+  // Oldest → newest values for the sparkline (last 12 sessions).
+  const sparkValues = useMemo(
+    () => [...sessions].reverse().slice(-12).map((s) => metricForSession(s, metric)),
+    [sessions, metric]
+  );
 
   const lastSession = sessions[0];
   const canUseLast = !!lastSession && lastSession.sets.some((s) => !s.isWarmup);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.scrim}>
         <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
-        <View
-          style={[
-            styles.sheet,
-            { backgroundColor: colors.bg, borderColor: colors.border },
-          ]}
-        >
+        <View style={[styles.sheet, { backgroundColor: colors.bg, borderColor: colors.border }]}>
           {/* Drag handle */}
           <View style={styles.handleWrap}>
             <View style={[styles.handle, { backgroundColor: colors.border }]} />
           </View>
 
-          {/* Header — exercise name + close */}
+          {/* Header */}
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
-              <Text
-                allowFontScaling={false}
-                numberOfLines={1}
-                style={[styles.title, { color: colors.text }]}
-              >
+              <Text allowFontScaling={false} numberOfLines={1} style={[styles.title, { color: colors.text }]}>
                 {exerciseName ?? "Exercise"}
               </Text>
-              <Text
-                allowFontScaling={false}
-                style={[styles.subtitle, { color: colors.textMuted }]}
-              >
+              <Text allowFontScaling={false} style={[styles.subtitle, { color: colors.textMuted }]}>
                 {sessions.length === 0
                   ? "No history yet"
                   : `${sessions.length} session${sessions.length === 1 ? "" : "s"} logged`}
@@ -176,162 +162,71 @@ export function ExerciseHistorySheet({
             </View>
           ) : error ? (
             <View style={styles.center}>
-              <Text style={[styles.errorTitle, { color: colors.text }]}>
-                Couldn&apos;t load history
-              </Text>
-              <Text
-                allowFontScaling={false}
-                style={[styles.errorBody, { color: colors.textMuted }]}
-              >
-                {error}
-              </Text>
+              <Text style={[styles.errorTitle, { color: colors.text }]}>Couldn&apos;t load history</Text>
+              <Text allowFontScaling={false} style={[styles.errorBody, { color: colors.textMuted }]}>{error}</Text>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => {
-                  hapticPress();
-                  refresh();
-                }}
-                style={[
-                  styles.retryBtn,
-                  { borderColor: colors.border, backgroundColor: colors.bgSecondary },
-                ]}
+                onPress={() => { hapticPress(); refresh(); }}
+                style={[styles.retryBtn, { borderColor: colors.border, backgroundColor: colors.bgSecondary }]}
               >
-                <Text style={[styles.retryText, { color: colors.text }]}>
-                  Tap to retry
-                </Text>
+                <Text style={[styles.retryText, { color: colors.text }]}>Tap to retry</Text>
               </Pressable>
             </View>
           ) : sessions.length === 0 ? (
             <View style={styles.center}>
-              <Ionicons
-                name="barbell-outline"
-                size={28}
-                color={colors.textMuted}
-              />
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                No sessions yet
-              </Text>
-              <Text
-                allowFontScaling={false}
-                style={[styles.emptyBody, { color: colors.textMuted }]}
-              >
+              <Ionicons name="barbell-outline" size={28} color={colors.textMuted} />
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No sessions yet</Text>
+              <Text allowFontScaling={false} style={[styles.emptyBody, { color: colors.textMuted }]}>
                 Log this exercise once and your history shows up here.
               </Text>
             </View>
           ) : (
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: spacing.xl + 56 }}
-            >
-              {/* Hero — display-size 1RM */}
-              <View style={styles.heroBlock}>
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.heroNumber, { color: colors.text }]}
-                >
-                  {stats.best1RM ? `${stats.best1RM}` : "—"}
-                </Text>
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.heroCaption, { color: colors.textMuted }]}
-                >
-                  Estimated 1-rep max · lbs
-                </Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xl + 56 }}>
+              {/* Personal best to beat */}
+              <Text allowFontScaling={false} style={[styles.sectionLabel, { color: colors.textMuted }]}>
+                Personal best to beat
+              </Text>
+              <View style={[styles.pbRow, { backgroundColor: colors.bgSecondary }]}>
+                <PBStat icon="trophy-outline" value={pbs.e1rm ? `${pbs.e1rm}` : "—"} unit="lbs" label="Est. 1RM" colors={colors} />
+                <View style={[styles.pbDivider, { backgroundColor: colors.border }]} />
+                <PBStat icon="barbell-outline" value={pbs.heaviest ? `${pbs.heaviest}` : "—"} unit="lbs" label="Max weight" colors={colors} />
+                <View style={[styles.pbDivider, { backgroundColor: colors.border }]} />
+                <PBStat icon="layers-outline" value={pbs.vol ? `${pbs.vol}` : "—"} unit="lbs" label="Best volume" colors={colors} />
               </View>
 
-              {/* Metric toggle */}
-              <View style={styles.toggleRow}>
-                <ToggleChip
-                  label="1RM Est."
-                  active={metric === "oneRM"}
-                  onPress={() => setMetric("oneRM")}
-                  colors={colors}
-                />
-                <ToggleChip
-                  label="Best Set Vol."
-                  active={metric === "volume"}
-                  onPress={() => setMetric("volume")}
-                  colors={colors}
-                />
-                <ToggleChip
-                  label="Heaviest"
-                  active={metric === "heaviest"}
-                  onPress={() => setMetric("heaviest")}
-                  colors={colors}
-                />
-              </View>
-
-              {/* Chart */}
-              {chartData.datasets[0].data.length > 1 ? (
-                <View style={styles.chartWrap}>
-                  <LineChart
-                    data={chartData}
-                    width={SCREEN_W - spacing.base * 2}
-                    height={180}
-                    withInnerLines={false}
-                    withOuterLines={false}
-                    withVerticalLabels={false}
-                    withDots
-                    withShadow={false}
-                    bezier
-                    chartConfig={{
-                      backgroundColor: colors.bg,
-                      backgroundGradientFrom: colors.bg,
-                      backgroundGradientTo: colors.bg,
-                      decimalPlaces: 0,
-                      color: () => colors.text,
-                      labelColor: () => colors.textMuted,
-                      propsForDots: {
-                        r: "3",
-                        strokeWidth: "0",
-                      },
-                    }}
-                    style={styles.chart}
-                  />
+              {/* Trend */}
+              <View style={styles.trendHead}>
+                <Text allowFontScaling={false} style={[styles.sectionLabel, { color: colors.textMuted, paddingHorizontal: 0, paddingTop: 0 }]}>
+                  Trend
+                </Text>
+                <View style={styles.toggleRow}>
+                  <ToggleChip label="1RM" active={metric === "oneRM"} onPress={() => setMetric("oneRM")} colors={colors} />
+                  <ToggleChip label="Volume" active={metric === "volume"} onPress={() => setMetric("volume")} colors={colors} />
+                  <ToggleChip label="Heaviest" active={metric === "heaviest"} onPress={() => setMetric("heaviest")} colors={colors} />
                 </View>
+              </View>
+              {sparkValues.length > 1 ? (
+                <Sparkline values={sparkValues} colors={colors} />
               ) : (
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.chartHint, { color: colors.textMuted }]}
-                >
-                  Log this exercise once more to see a trend chart.
+                <Text allowFontScaling={false} style={[styles.chartHint, { color: colors.textMuted }]}>
+                  Log this exercise once more to see a trend.
                 </Text>
               )}
 
-              {/* Section label */}
-              <Text
-                allowFontScaling={false}
-                style={[styles.sectionLabel, { color: colors.textMuted }]}
-              >
-                History
-              </Text>
-
-              {/* Chronological session list */}
+              {/* History */}
+              <Text allowFontScaling={false} style={[styles.sectionLabel, { color: colors.textMuted }]}>History</Text>
               {sessions.map((session) => (
-                <View
-                  key={session.sessionId}
-                  style={[styles.sessionRow, { borderBottomColor: colors.border }]}
-                >
+                <View key={session.sessionId} style={[styles.sessionRow, { borderBottomColor: colors.border }]}>
                   <View style={styles.sessionHead}>
-                    <Text
-                      allowFontScaling={false}
-                      style={[styles.sessionDate, { color: colors.text }]}
-                    >
+                    <Text allowFontScaling={false} style={[styles.sessionDate, { color: colors.text }]}>
                       {formatDate(session.date)}
                     </Text>
-                    <Text
-                      allowFontScaling={false}
-                      style={[styles.sessionSummary, { color: colors.textMuted }]}
-                    >
+                    <Text allowFontScaling={false} style={[styles.sessionSummary, { color: colors.textMuted }]}>
                       {summarizeSets(session)}
                     </Text>
                   </View>
                   {session.notes ? (
-                    <Text
-                      allowFontScaling={false}
-                      numberOfLines={2}
-                      style={[styles.sessionNotes, { color: colors.textMuted }]}
-                    >
+                    <Text allowFontScaling={false} numberOfLines={2} style={[styles.sessionNotes, { color: colors.textMuted }]}>
                       {session.notes}
                     </Text>
                   ) : null}
@@ -342,9 +237,7 @@ export function ExerciseHistorySheet({
 
           {/* Sticky bottom CTA */}
           {!loading && !error && canUseLast && onUseLastWorkout && (
-            <View
-              style={[styles.ctaBar, { backgroundColor: colors.bg, borderTopColor: colors.border }]}
-            >
+            <View style={[styles.ctaBar, { backgroundColor: colors.bg, borderTopColor: colors.border }]}>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
@@ -355,20 +248,9 @@ export function ExerciseHistorySheet({
                   onUseLastWorkout(sets);
                   onClose();
                 }}
-                style={({ pressed }) => [
-                  styles.ctaBtn,
-                  {
-                    backgroundColor: colors.text,
-                    opacity: pressed ? 0.85 : 1,
-                  },
-                ]}
+                style={({ pressed }) => [styles.ctaBtn, { backgroundColor: colors.text, opacity: pressed ? 0.85 : 1 }]}
               >
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.ctaText, { color: colors.bg }]}
-                >
-                  Use Last Workout
-                </Text>
+                <Text allowFontScaling={false} style={[styles.ctaText, { color: colors.bg }]}>Use Last Workout</Text>
               </Pressable>
             </View>
           )}
@@ -378,12 +260,46 @@ export function ExerciseHistorySheet({
   );
 }
 
-function ToggleChip({
-  label,
-  active,
-  onPress,
-  colors,
-}: {
+function PBStat({ icon, value, unit, label, colors }: {
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+  unit: string;
+  label: string;
+  colors: ReturnType<typeof useTheme>["colors"];
+}) {
+  return (
+    <View style={styles.pbStat}>
+      <Ionicons name={icon} size={16} color={colors.textMuted} />
+      <View style={styles.pbValueRow}>
+        <Text allowFontScaling={false} style={[styles.pbValue, { color: colors.text }]}>{value}</Text>
+        {value !== "—" && (
+          <Text allowFontScaling={false} style={[styles.pbUnit, { color: colors.textMuted }]}>{unit}</Text>
+        )}
+      </View>
+      <Text allowFontScaling={false} style={[styles.pbLabel, { color: colors.textMuted }]}>{label}</Text>
+    </View>
+  );
+}
+
+function Sparkline({ values, colors }: { values: number[]; colors: ReturnType<typeof useTheme>["colors"] }) {
+  const max = Math.max(...values, 1);
+  return (
+    <View style={styles.spark}>
+      {values.map((v, i) => {
+        const isLast = i === values.length - 1;
+        const h = Math.max(4, (v / max) * 60);
+        return (
+          <View
+            key={i}
+            style={[styles.sparkBar, { height: h, backgroundColor: isLast ? colors.text : colors.border }]}
+          />
+        );
+      })}
+    </View>
+  );
+}
+
+function ToggleChip({ label, active, onPress, colors }: {
   label: string;
   active: boolean;
   onPress: () => void;
@@ -391,25 +307,10 @@ function ToggleChip({
 }) {
   return (
     <Pressable
-      onPress={() => {
-        hapticPress();
-        onPress();
-      }}
-      style={[
-        styles.toggleChip,
-        {
-          backgroundColor: active ? colors.text : colors.bgSecondary,
-          borderColor: active ? colors.text : colors.border,
-        },
-      ]}
+      onPress={() => { hapticPress(); onPress(); }}
+      style={[styles.toggleChip, { backgroundColor: active ? colors.text : colors.bgSecondary, borderColor: active ? colors.text : colors.border }]}
     >
-      <Text
-        allowFontScaling={false}
-        style={[
-          styles.toggleLabel,
-          { color: active ? colors.bg : colors.textMuted },
-        ]}
-      >
+      <Text allowFontScaling={false} style={[styles.toggleLabel, { color: active ? colors.bg : colors.textMuted }]}>
         {label}
       </Text>
     </Pressable>
@@ -417,11 +318,7 @@ function ToggleChip({
 }
 
 const styles = StyleSheet.create({
-  scrim: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "flex-end",
-  },
+  scrim: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
   sheet: {
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
@@ -429,11 +326,7 @@ const styles = StyleSheet.create({
     maxHeight: "88%",
     minHeight: "60%",
   },
-  handleWrap: {
-    alignItems: "center",
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
+  handleWrap: { alignItems: "center", paddingTop: 8, paddingBottom: 4 },
   handle: { width: 40, height: 4, borderRadius: 2 },
 
   header: {
@@ -446,27 +339,11 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 20, fontWeight: "700" },
   subtitle: { fontSize: 12, marginTop: 2 },
+  closeBtn: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
 
-  closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  center: {
-    paddingVertical: spacing.xxl,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-  },
+  center: { paddingVertical: spacing.xxl, alignItems: "center", justifyContent: "center", gap: spacing.sm },
   emptyTitle: { fontSize: 16, fontWeight: "600" },
-  emptyBody: {
-    fontSize: 13,
-    textAlign: "center",
-    paddingHorizontal: spacing.xl,
-  },
+  emptyBody: { fontSize: 13, textAlign: "center", paddingHorizontal: spacing.xl },
   errorTitle: { fontSize: 16, fontWeight: "600" },
   errorBody: { fontSize: 13, textAlign: "center", paddingHorizontal: spacing.xl },
   retryBtn: {
@@ -478,48 +355,9 @@ const styles = StyleSheet.create({
   },
   retryText: { fontSize: 13, fontWeight: "600" },
 
-  heroBlock: {
-    alignItems: "center",
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.lg,
-  },
-  heroNumber: {
-    fontSize: 64,
-    fontWeight: "700",
-    letterSpacing: -1.5,
-    fontVariant: ["tabular-nums"],
-  },
-  heroCaption: { fontSize: 12, marginTop: 4 },
-
-  toggleRow: {
-    flexDirection: "row",
-    gap: 6,
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.md,
-  },
-  toggleChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  toggleLabel: { fontSize: 12, fontWeight: "600" },
-
-  chartWrap: {
-    paddingHorizontal: spacing.base,
-    marginBottom: spacing.md,
-  },
-  chart: { borderRadius: radius.md, marginLeft: -spacing.sm },
-  chartHint: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.md,
-    fontSize: 12,
-    textAlign: "center",
-  },
-
   sectionLabel: {
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
     paddingBottom: 8,
     fontSize: 11,
     fontWeight: "700",
@@ -527,23 +365,54 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 
+  // Personal bests
+  pbRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: spacing.base,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.base,
+  },
+  pbStat: { flex: 1, alignItems: "center", gap: 3 },
+  pbDivider: { width: StyleSheet.hairlineWidth, height: 36 },
+  pbValueRow: { flexDirection: "row", alignItems: "baseline", gap: 2 },
+  pbValue: { fontSize: 20, fontWeight: "700", letterSpacing: -0.5, fontVariant: ["tabular-nums"] },
+  pbUnit: { fontSize: 11, fontWeight: "500" },
+  pbLabel: { fontSize: 11, fontWeight: "500", textTransform: "uppercase", letterSpacing: 0.3 },
+
+  // Trend
+  trendHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  toggleRow: { flexDirection: "row", gap: 6 },
+  toggleChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth },
+  toggleLabel: { fontSize: 11, fontWeight: "600" },
+  spark: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    height: 64,
+    gap: 4,
+    paddingHorizontal: spacing.base,
+    marginBottom: spacing.sm,
+  },
+  sparkBar: { flex: 1, borderRadius: 2, minHeight: 4 },
+  chartHint: { paddingHorizontal: spacing.base, paddingBottom: spacing.md, fontSize: 12, textAlign: "center" },
+
+  // History
   sessionRow: {
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 4,
   },
-  sessionHead: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    gap: spacing.sm,
-  },
+  sessionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: spacing.sm },
   sessionDate: { fontSize: 14, fontWeight: "600" },
-  sessionSummary: {
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
-  },
+  sessionSummary: { fontSize: 13, fontVariant: ["tabular-nums"] },
   sessionNotes: { fontSize: 12, fontStyle: "italic" },
 
   ctaBar: {
@@ -556,12 +425,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  ctaBtn: {
-    height: 48,
-    borderRadius: radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  ctaBtn: { height: 48, borderRadius: radius.md, alignItems: "center", justifyContent: "center" },
   ctaText: { fontSize: 15, fontWeight: "700" },
 });
 
