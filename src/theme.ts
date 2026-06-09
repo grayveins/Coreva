@@ -23,21 +23,22 @@ const colors = {
   bgSecondary: "#F5F5F5",
   bgTertiary: "#F0F0F0",
 
-  // Primary — black CTAs, active states
-  primary: "#000000",
-  primaryDark: "#000000",
-  primaryLight: "#333333",
-  primaryMuted: "rgba(0, 0, 0, 0.06)",
-  primaryFaint: "rgba(0, 0, 0, 0.03)",
+  // Primary — electric-blue brand accent: CTAs, active states, progress.
+  primary: "#2F6BFF",
+  primaryDark: "#1E54E6",
+  primaryLight: "#5B8BFF",
+  primaryMuted: "rgba(47, 107, 255, 0.10)",
+  primaryFaint: "rgba(47, 107, 255, 0.04)",
 
   // Success — completed states only
   success: "#22C55E",
   successDark: "#16A34A",
   successMuted: "rgba(34, 197, 94, 0.10)",
 
-  // Functional accents (use sparingly)
-  intensity: "#000000",
-  gold: "#000000",
+  // Functional/semantic accents (carry meaning only)
+  intensity: "#FF6B35", // rest timer / urgency
+  gold: "#F5B400",      // PRs, achievements
+  goldMuted: "rgba(245, 180, 0, 0.12)",
 
   // Semantic
   error: "#EF4444",
@@ -69,18 +70,18 @@ const colors = {
   // Input
   inputBg: "#FFFFFF",
   inputBorder: "#E5E7EB",
-  inputBorderFocus: "#000000",
+  inputBorderFocus: "#2F6BFF",
   inputPlaceholder: "#9CA3AF",
 
   // Tab Bar
   tabBarBg: "#FFFFFF",
   tabBarBorder: "#F3F4F6",
-  tabBarActive: "#000000",
+  tabBarActive: "#2F6BFF",
   tabBarInactive: "#9CA3AF",
 
   // Progress
   progressBg: "#E5E7EB",
-  progressFill: "#000000",
+  progressFill: "#2F6BFF",
 
   // Legacy compatibility aliases
   bgTop: "#FFFFFF",
@@ -88,8 +89,8 @@ const colors = {
   muted2: "#9CA3AF",
   chip: "#000000",
   ringBg: "#E5E7EB",
-  accent: "#000000",
-  accentMuted: "rgba(0, 0, 0, 0.06)",
+  accent: "#2F6BFF",
+  accentMuted: "rgba(47, 107, 255, 0.10)",
   selectedBg: "rgba(0, 0, 0, 0.05)",
   pressedBg: "rgba(0, 0, 0, 0.08)",
   hoverBg: "rgba(0, 0, 0, 0.03)",
@@ -290,8 +291,8 @@ export const components = {
 // GRADIENTS - For cards, muscle groups, etc.
 // =============================================================================
 export const gradients = {
-  primary: ["#000000", "#1A1A1A"] as const,
-  primarySubtle: ["rgba(0, 0, 0, 0.04)", "rgba(0, 0, 0, 0.02)"] as const,
+  primary: ["#2F6BFF", "#1E54E6"] as const,
+  primarySubtle: ["rgba(47, 107, 255, 0.06)", "rgba(47, 107, 255, 0.03)"] as const,
   card: ["#FFFFFF", "#F9FAFB"] as const,
   cardHover: ["#F9FAFB", "#F3F4F6"] as const,
   chest: ["#000000", "#1A1A1A"] as const,
