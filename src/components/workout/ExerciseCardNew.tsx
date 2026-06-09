@@ -62,6 +62,20 @@ export const ExerciseCardNew: React.FC<ExerciseCardNewProps> = ({
   const completedSets = sets.filter(s => s.completed).length;
   const totalSets = sets.length;
 
+  // Autofill: copy each set's previous weight/reps into any empty, not-yet-
+  // completed set. One tap to chase last session instead of per-cell taps.
+  const hasPrevious = previousSets.some(Boolean);
+  const autofill = () => {
+    hapticPress();
+    sets.forEach((s, i) => {
+      if (s.completed) return;
+      const prev = previousSets[i];
+      if (!prev) return;
+      if (!s.weight && prev.weight) onSetChange(s.id, "weight", prev.weight);
+      if (!s.reps && prev.reps) onSetChange(s.id, "reps", prev.reps);
+    });
+  };
+
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       {/* Exercise header */}
@@ -112,6 +126,9 @@ export const ExerciseCardNew: React.FC<ExerciseCardNewProps> = ({
         )}
         {onSwapExercise && (
           <Chip icon="swap-horizontal-outline" label="Swap" onPress={onSwapExercise} colors={colors} />
+        )}
+        {hasPrevious && (
+          <Chip icon="flash-outline" label="Autofill" onPress={autofill} colors={colors} />
         )}
       </View>
 
