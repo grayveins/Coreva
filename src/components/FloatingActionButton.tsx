@@ -7,6 +7,7 @@ import { useTheme } from "@/src/context/ThemeContext";
 import { spacing, radius } from "@/src/theme";
 import { hapticPress } from "@/src/animations/feedback/haptics";
 import { useActiveWorkoutSafe } from "@/src/context/ActiveWorkoutContext";
+import { StartWorkoutSheet } from "@/src/components/workout/StartWorkoutSheet";
 
 type Action = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -18,6 +19,7 @@ export function FloatingActionButton() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
+  const [showStartSheet, setShowStartSheet] = useState(false);
   const segments = useSegments();
   const workoutCtx = useActiveWorkoutSafe();
   const hideFab =
@@ -36,7 +38,7 @@ export function FloatingActionButton() {
     {
       icon: "barbell-outline",
       label: "Start Workout",
-      onPress: () => router.push("/(app)/(tabs)/workout" as any),
+      onPress: () => setShowStartSheet(true),
     },
     {
       icon: "camera-outline",
@@ -78,6 +80,8 @@ export function FloatingActionButton() {
       >
         <Ionicons name="add" size={28} color={colors.bg} />
       </Pressable>
+
+      <StartWorkoutSheet visible={showStartSheet} onClose={() => setShowStartSheet(false)} />
     </>
   );
 }
