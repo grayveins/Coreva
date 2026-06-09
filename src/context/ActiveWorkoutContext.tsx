@@ -948,8 +948,13 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
           } else if (!current.restTimer.active) {
             // Only start the rest timer if one isn't already counting down.
             // Completing multiple sets quickly would otherwise restart the
-            // timer on each completion, which feels buggy.
-            dispatch({ type: "START_REST", afterExerciseId: exerciseId });
+            // timer on each completion, which feels buggy. Honor the
+            // exercise's prescribed rest (coach-set), not the generic default.
+            dispatch({
+              type: "START_REST",
+              afterExerciseId: exerciseId,
+              duration: currentExercise.restTimerSeconds,
+            });
           }
         }, 800);
       }
