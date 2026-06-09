@@ -1,6 +1,7 @@
 /**
- * Exercise Library — Database-driven
- * Browse, search, and select exercises from the Supabase exercises table.
+ * Exercise picker — database-driven, single purpose: add an exercise to the
+ * active workout. Reached from the "Add Exercise" button. Tap an exercise to
+ * add it; long-press to peek coaching cues.
  */
 
 import React, { useState, useCallback } from "react";
@@ -15,7 +16,7 @@ import {
   DeviceEventEmitter,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/context/ThemeContext";
 import { hapticPress, hapticSuccess } from "@/src/animations/feedback/haptics";
@@ -35,20 +36,18 @@ const MUSCLE_GROUPS: { id: string; label: string; muscles: string[] }[] = [
 
 type RowProps = {
   ex: DBExercise;
-  isSelected: boolean;
   isExpanded: boolean;
-  isAddMode: boolean;
-  onPress: (ex: DBExercise) => void;
+  onPick: (ex: DBExercise) => void;
   onToggleExpand: (id: string) => void;
 };
 
-const ExerciseRow = React.memo(function ExerciseRow({ ex, isSelected, isExpanded, isAddMode, onPress, onToggleExpand }: RowProps) {
+const ExerciseRow = React.memo(function ExerciseRow({ ex, isExpanded, onPick, onToggleExpand }: RowProps) {
   const { colors } = useTheme();
   return (
     <Pressable
-      onPress={() => onPress(ex)}
+      onPress={() => onPick(ex)}
       onLongPress={() => onToggleExpand(ex.id)}
-      style={[styles.exerciseRow, { borderBottomColor: colors.border }, isSelected && { backgroundColor: colors.primaryMuted }]}
+      style={[styles.exerciseRow, { borderBottomColor: colors.border }]}
     >
       <View style={styles.exerciseMain}>
         <Text allowFontScaling={false} style={[styles.exerciseName, { color: colors.text }]}>
@@ -76,57 +75,28 @@ const ExerciseRow = React.memo(function ExerciseRow({ ex, isSelected, isExpanded
           </View>
         )}
       </View>
-      {!isAddMode && (
-        <View style={[styles.checkbox, isSelected && { backgroundColor: colors.text }]}>
-          {isSelected && <Ionicons name="checkmark" size={14} color={colors.bg} />}
-        </View>
-      )}
-      {isAddMode && <Ionicons name="add-circle-outline" size={22} color={colors.textMuted} />}
+      <Ionicons name="add-circle-outline" size={24} color={colors.textMuted} />
     </Pressable>
   );
 });
 
 export default function ExercisesScreen() {
   const { colors } = useTheme();
-  const params = useLocalSearchParams<{ mode?: string }>();
-  const isAddMode = params.mode === "add";
-
   const { exercises, loading, search, setSearch, muscleFilter, setMuscleFilter } = useExercises();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const toggleExercise = useCallback((ex: DBExercise) => {
+  const pickExercise = useCallback((ex: DBExercise) => {
+    // The active-workout provider is mounted in active.tsx, not above this
+    // sibling stack screen, so we can't dispatch directly. Emit an event;
+    // active.tsx subscribes and dispatches addExercise.
     hapticPress();
-    if (isAddMode) {
-      // The active-workout provider is mounted in active.tsx, not above this
-      // sibling stack screen, so we can't dispatch directly. Emit an event;
-      // active.tsx subscribes and dispatches addExercise.
-      DeviceEventEmitter.emit(ADD_EXERCISE_EVENT, {
-        name: ex.name,
-        muscles: ex.primary_muscles || [],
-      });
-      hapticSuccess();
-      router.back();
-      return;
-    }
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(ex.name) ? next.delete(ex.name) : next.add(ex.name);
-      return next;
+    DeviceEventEmitter.emit(ADD_EXERCISE_EVENT, {
+      name: ex.name,
+      muscles: ex.primary_muscles || [],
     });
-  }, [isAddMode]);
-
-  const startWorkout = useCallback(() => {
-    if (selected.size === 0) return;
     hapticSuccess();
-    const exList = exercises
-      .filter((e) => selected.has(e.name))
-      .map((e) => ({ name: e.name, sets: 3, reps: "8-12", rir: 2, muscleGroup: e.primary_muscles?.[0] }));
-    router.push({
-      pathname: "/(workout)/preview",
-      params: { type: "Custom", name: "Custom Workout", exercises: JSON.stringify(exList) },
-    });
-  }, [selected, exercises]);
+    router.back();
+  }, []);
 
   const onToggleExpand = useCallback((id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -135,13 +105,11 @@ export default function ExercisesScreen() {
   const renderExercise = useCallback(({ item: ex }: { item: DBExercise }) => (
     <ExerciseRow
       ex={ex}
-      isSelected={selected.has(ex.name)}
       isExpanded={expandedId === ex.id}
-      isAddMode={isAddMode}
-      onPress={toggleExercise}
+      onPick={pickExercise}
       onToggleExpand={onToggleExpand}
     />
-  ), [selected, expandedId, isAddMode, toggleExercise, onToggleExpand]);
+  ), [expandedId, pickExercise, onToggleExpand]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={["top"]}>
@@ -151,7 +119,7 @@ export default function ExercisesScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text allowFontScaling={false} style={[styles.title, { color: colors.text }]}>
-          Exercises
+          Add Exercise
         </Text>
         <View style={{ width: 24 }} />
       </View>
@@ -183,7 +151,7 @@ export default function ExercisesScreen() {
       >
         <Pressable
           onPress={() => setMuscleFilter(null)}
-          style={[styles.filterChip, !muscleFilter && { backgroundColor: colors.text, borderColor: colors.text }]}
+          style={[styles.filterChip, { borderColor: colors.border }, !muscleFilter && { backgroundColor: colors.text, borderColor: colors.text }]}
         >
           <Text allowFontScaling={false} style={[styles.filterText, { color: muscleFilter ? colors.textMuted : colors.bg }]}>
             All
@@ -195,7 +163,7 @@ export default function ExercisesScreen() {
             <Pressable
               key={g.id}
               onPress={() => setMuscleFilter(isActive ? null : g.muscles)}
-              style={[styles.filterChip, isActive && { backgroundColor: colors.text, borderColor: colors.text }]}
+              style={[styles.filterChip, { borderColor: colors.border }, isActive && { backgroundColor: colors.text, borderColor: colors.text }]}
             >
               <Text
                 allowFontScaling={false}
@@ -217,23 +185,13 @@ export default function ExercisesScreen() {
         contentContainerStyle={styles.list}
         initialNumToRender={15}
         maxToRenderPerBatch={10}
+        keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           <Text allowFontScaling={false} style={[styles.emptyText, { color: colors.textMuted }]}>
             {loading ? "Loading exercises..." : "No exercises found"}
           </Text>
         }
       />
-
-      {/* Start workout bar */}
-      {!isAddMode && selected.size > 0 && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border }]}>
-          <Pressable onPress={startWorkout} style={[styles.startButton, { backgroundColor: colors.text }]}>
-            <Text allowFontScaling={false} style={[styles.startText, { color: colors.bg }]}>
-              Start Workout ({selected.size})
-            </Text>
-          </Pressable>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -267,11 +225,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
   filterText: { fontSize: 13, lineHeight: 16, fontWeight: "500", textTransform: "capitalize" },
   listFlex: { flex: 1 },
-  list: { paddingBottom: 100 },
+  list: { paddingBottom: 40 },
   exerciseRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -286,30 +243,5 @@ const styles = StyleSheet.create({
   tag: { fontSize: 11, textTransform: "capitalize" },
   cuesSection: { marginTop: spacing.sm, gap: 2 },
   cueText: { fontSize: 12, lineHeight: 17 },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: "#D1D5DB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   emptyText: { textAlign: "center", marginTop: 40, fontSize: 14 },
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: spacing.lg,
-    paddingBottom: 34,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  startButton: {
-    height: 52,
-    borderRadius: radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  startText: { fontSize: 16, fontWeight: "600" },
 });
