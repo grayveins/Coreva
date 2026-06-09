@@ -6,7 +6,7 @@
  *    when the user is on Workouts/Calendar/Meals, so they don't miss it.
  *  - Don't be annoying: never fires when the user is already on the chat
  *    screen (anti-pattern: notifying about something they're looking at).
- *  - Subtle by default: a soft haptic, no sound — this is the client app,
+ *  - Subtle by default: a soft haptic, no sound - this is the client app,
  *    used in gyms with phone face-down.
  *  - Recognition over recall: the banner shows a short preview of the message
  *    so the user can decide whether to interrupt their flow.

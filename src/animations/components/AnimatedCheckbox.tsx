@@ -42,7 +42,7 @@ export const AnimatedCheckbox: React.FC<AnimatedCheckboxProps> = ({
 
   useEffect(() => {
     if (checked) {
-      // Animate to checked state — Hevy-style crisp snap, no bouncy overshoot
+      // Animate to checked state - Hevy-style crisp snap, no bouncy overshoot
       progress.value = withTiming(1, { duration: TIMING.fast });
       scale.value = withSequence(
         withTiming(1.08, { duration: 80 }),

@@ -1,5 +1,5 @@
 /**
- * ProgramCard — Hevy/Gravl/Fitbod-inspired
+ * ProgramCard - Hevy/Gravl/Fitbod-inspired
  *
  * Premium program card with gradient accent bar, structured layout,
  * goal/difficulty pills, exercise day count, and "Start" affordance.

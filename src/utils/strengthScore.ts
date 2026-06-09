@@ -4,7 +4,7 @@
  * Calculates a 0-999 score based on estimated 1RMs relative to bodyweight.
  * Uses Wilks-inspired multipliers adjusted for a simple 0-999 scale.
  *
- * This is a placeholder implementation — will be replaced with a proper
+ * This is a placeholder implementation - will be replaced with a proper
  * algorithm once the Strength Score feature is fully built.
  */
 

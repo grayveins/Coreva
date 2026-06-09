@@ -59,7 +59,7 @@ export type RestTimerState = {
   active: boolean;
   afterExerciseId: string | null;
   /** Wallclock epoch (ms) when the timer expires. Survives backgrounding
-   *  and app kill — derived `secondsLeft` is always recomputed from this. */
+   *  and app kill - derived `secondsLeft` is always recomputed from this. */
   endsAt: number | null;
   secondsLeft: number;
   defaultDuration: number;
@@ -202,7 +202,7 @@ async function saveDraft(state: ActiveWorkoutState): Promise<void> {
     };
     await AsyncStorage.setItem(WORKOUT_DRAFT_KEY, JSON.stringify(draft));
   } catch {
-    // Silent — don't crash a workout over a failed checkpoint
+    // Silent - don't crash a workout over a failed checkpoint
   }
 }
 
@@ -228,7 +228,7 @@ export async function loadDraft(): Promise<WorkoutDraft | null> {
 const DEFAULT_REST_DURATION = 90;
 
 /** A rehydrated draft older than this (or started on a prior calendar day)
- *  is "stale" — we ask the user what to do rather than silently resuming. */
+ *  is "stale" - we ask the user what to do rather than silently resuming. */
 const STALE_RESUME_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 function isDraftStale(startTime: number, now: number = Date.now()): boolean {
@@ -326,7 +326,7 @@ function workoutReducer(state: ActiveWorkoutState, action: Action): ActiveWorkou
     return { ...emptyState(), userId: state.userId };
   }
 
-  // Everything else requires an active session — defensively no-op when the
+  // Everything else requires an active session - defensively no-op when the
   // provider tree is mounted but no workout is running.
   if (!state.isActive) return state;
 
@@ -513,7 +513,7 @@ function workoutReducer(state: ActiveWorkoutState, action: Action): ActiveWorkou
       };
     }
 
-    // Rest timer (wallclock-driven — survives backgrounding and app kill).
+    // Rest timer (wallclock-driven - survives backgrounding and app kill).
     case "START_REST": {
       const duration = action.duration ?? state.restTimer.defaultDuration;
       return {
@@ -675,7 +675,7 @@ type ProviderProps = {
 export function ActiveWorkoutProvider({ children }: ProviderProps) {
   const [state, dispatch] = useReducer(workoutReducer, undefined, emptyState);
 
-  // Always-current ref to state — used in setTimeout callbacks to avoid
+  // Always-current ref to state - used in setTimeout callbacks to avoid
   // stale closures when multiple sets complete in quick succession.
   const stateRef = useRef(state);
   useEffect(() => {
@@ -728,7 +728,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
     };
   }, []);
 
-  // Elapsed timer — only ticks while a session is active.
+  // Elapsed timer - only ticks while a session is active.
   useEffect(() => {
     if (!state.isActive) return;
     const interval = setInterval(() => dispatch({ type: "TICK_ELAPSED" }), 1000);
@@ -744,7 +744,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
     return () => clearInterval(interval);
   }, [state.restTimer.active]);
 
-  // Resync the wallclock rest timer when the app returns to the foreground —
+  // Resync the wallclock rest timer when the app returns to the foreground -
   // intervals are paused while backgrounded, so the stored secondsLeft can
   // be stale by the time we wake up.
   useEffect(() => {
@@ -774,14 +774,14 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
   // Debounced checkpoint to AsyncStorage on every state change.
   // 500ms debounce so the AsyncStorage queue doesn't thrash during typing,
   // but every meaningful pause (set completion, swap, add/delete) flushes
-  // to disk — which is what protects against a hard app kill.
+  // to disk - which is what protects against a hard app kill.
   useEffect(() => {
     if (!state.isActive) return;
     const t = setTimeout(() => saveDraft(state), 500);
     return () => clearTimeout(t);
   }, [state]);
 
-  // Force-flush on background/inactive — the OS may kill us shortly after.
+  // Force-flush on background/inactive - the OS may kill us shortly after.
   useEffect(() => {
     const sub = AppState.addEventListener("change", (next) => {
       if (next === "background" || next === "inactive") saveDraft(state);
@@ -805,7 +805,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
               { id: `set-add-${seed}-1`, weight: "", reps: "", completed: false, isWarmup: false, isPR: false },
               { id: `set-add-${seed}-2`, weight: "", reps: "", completed: false, isWarmup: false, isPR: false },
             ],
-            // Freestyle adds carry no coach prescription — leave reps/RIR
+            // Freestyle adds carry no coach prescription - leave reps/RIR
             // blank so the card shows just the set count, not a fake "8-12".
             targetReps: "",
             targetRIR: 0,
@@ -912,7 +912,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
         hapticPress();
         dispatch({ type: "TOGGLE_SET_COMPLETE", exerciseId, setId });
       } else {
-        // Complete — require weight & reps
+        // Complete - require weight & reps
         if (!set.weight || !set.reps) {
           showToast({ message: "Enter weight & reps first", type: "motivation" });
           return;
@@ -985,7 +985,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
     finishWorkout: async () => {
       dispatch({ type: "SHOW_CELEBRATION", show: false });
 
-      // Resolve user fresh from auth as a fallback — `state.userId` can be
+      // Resolve user fresh from auth as a fallback - `state.userId` can be
       // null if the provider's initial getUser() race lost to the user
       // starting a workout, or if the draft was hydrated before auth wired
       // up. Previously we'd silently tear down here, which made every End
@@ -1001,7 +1001,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
         }
       }
       if (!userId) {
-        // No auth — surface a real error so the caller's catch fires.
+        // No auth - surface a real error so the caller's catch fires.
         // We do NOT tear down state; the user can fix sign-in and retry.
         throw new Error(
           "Not signed in. Please re-open the app or sign in again before saving.",
@@ -1009,7 +1009,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
       }
 
       try {
-        // 1. Create session — backfill to selected day if user logged for a past date
+        // 1. Create session - backfill to selected day if user logged for a past date
         const lastActivityAt = state.setCompletionTimestamps.length
           ? Math.max(...state.setCompletionTimestamps)
           : null;
@@ -1099,7 +1099,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
           }
         }
 
-        // 4. Update streak — pass the session's actual date (not CURRENT_DATE)
+        // 4. Update streak - pass the session's actual date (not CURRENT_DATE)
         // so backfilled workouts don't get attributed to today.
         const workoutDate = `${startedAt.getFullYear()}-${String(
           startedAt.getMonth() + 1
@@ -1110,7 +1110,7 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
         });
         if (streakError) console.error(streakError);
 
-        // 5. Clear draft + tear down session — workout saved successfully
+        // 5. Clear draft + tear down session - workout saved successfully
         await clearDraft();
         dispatch({ type: "END_SESSION" });
 
@@ -1122,19 +1122,19 @@ export function ActiveWorkoutProvider({ children }: ProviderProps) {
           (e as any)?.message ?? (typeof e === "string" ? e : "Unknown error");
         Alert.alert(
           "Couldn't save workout",
-          `${detail}\n\nYour sets are still in this session — you can try ending again.`,
+          `${detail}\n\nYour sets are still in this session - you can try ending again.`,
         );
         throw e; // Re-throw so caller knows it failed
       }
 
-      // NOTE: Do NOT navigate here — caller handles navigation
+      // NOTE: Do NOT navigate here - caller handles navigation
       // after any post-save actions (XP award, save-as-template, etc.)
     },
 
     discardWorkout: () => {
       // Silent: clear state immediately. Callers (mini-bar trash button,
       // EndWorkoutSheet's empty-mode "Discard") are responsible for any
-      // confirmation UI before invoking this — keeps the action layer
+      // confirmation UI before invoking this - keeps the action layer
       // free of system Alert.alert chrome and lets each surface use
       // its own themed sheet.
       clearDraft();
@@ -1226,7 +1226,7 @@ export function useActiveWorkout(): ContextValue {
   return ctx;
 }
 
-/** Safe version — returns null when outside the provider instead of throwing */
+/** Safe version - returns null when outside the provider instead of throwing */
 export function useActiveWorkoutSafe(): ContextValue | null {
   return useContext(ActiveWorkoutContext);
 }

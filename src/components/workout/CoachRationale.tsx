@@ -2,7 +2,7 @@
  * CoachRationale
  *
  * Collapsible card that explains WHY the AI chose specific exercises,
- * weights, and programming for the user. Key differentiator — no
+ * weights, and programming for the user. Key differentiator - no
  * competitor does this.
  *
  * Collapsed: single line "Your coach adapted today's workout" + chevron
@@ -155,7 +155,7 @@ export function CoachRationale({ items, limitationAreas }: CoachRationaleProps) 
         },
       ]}
     >
-      {/* Collapsed header — always visible */}
+      {/* Collapsed header - always visible */}
       <Pressable
         onPress={toggle}
         style={styles.header}

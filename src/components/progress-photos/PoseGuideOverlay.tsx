@@ -62,7 +62,7 @@ export function PoseGuideOverlay({ pose }: { pose: ProgressPose }) {
         </View>
       ) : null}
 
-      {/* Vertical centerline — full height */}
+      {/* Vertical centerline - full height */}
       <View style={styles.verticalLine} />
 
       {/* Eyes / Ears horizontal line */}

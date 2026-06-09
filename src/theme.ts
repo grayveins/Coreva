@@ -1,5 +1,5 @@
 /**
- * ADPT Design System v4 — Minimal Black & White
+ * ADPT Design System v4 - Minimal Black & White
  *
  * Design reference: Cal AI light mode
  * - White background, black text, no color accents
@@ -15,7 +15,7 @@
 import { Platform } from "react-native";
 
 // =============================================================================
-// COLORS — Single light theme (Cal AI inspired)
+// COLORS - Single light theme (Cal AI inspired)
 // =============================================================================
 const colors = {
   // Backgrounds
@@ -23,14 +23,14 @@ const colors = {
   bgSecondary: "#F5F5F5",
   bgTertiary: "#F0F0F0",
 
-  // Primary — black CTAs, active states
+  // Primary - black CTAs, active states
   primary: "#000000",
   primaryDark: "#000000",
   primaryLight: "#333333",
   primaryMuted: "rgba(0, 0, 0, 0.06)",
   primaryFaint: "rgba(0, 0, 0, 0.03)",
 
-  // Success — completed states only
+  // Success - completed states only
   success: "#22C55E",
   successDark: "#16A34A",
   successMuted: "rgba(34, 197, 94, 0.10)",

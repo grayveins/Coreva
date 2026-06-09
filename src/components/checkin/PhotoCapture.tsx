@@ -1,5 +1,5 @@
 /**
- * PhotoCapture Component — Trainerize-style progress photo capture
+ * PhotoCapture Component - Trainerize-style progress photo capture
  *
  * Flow: Pose reference card → Camera with alignment guides → Preview/confirm
  *
@@ -51,7 +51,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CAMERA_HEIGHT = SCREEN_HEIGHT * 0.7;
 
 // ---------------------------------------------------------------------------
-// Pose config — labels, guide line labels, instructions
+// Pose config - labels, guide line labels, instructions
 // ---------------------------------------------------------------------------
 const POSE_CONFIG: Record<
   PoseType,
@@ -287,19 +287,19 @@ const instructionStyles = StyleSheet.create({
 });
 
 // ---------------------------------------------------------------------------
-// Alignment Guide Overlay — lines + labels like Trainerize
+// Alignment Guide Overlay - lines + labels like Trainerize
 // ---------------------------------------------------------------------------
 function AlignmentGuide({ pose }: { pose: PoseType }) {
   const config = POSE_CONFIG[pose];
 
   return (
     <View style={guideStyles.container} pointerEvents="none">
-      {/* Pose label — top left */}
+      {/* Pose label - top left */}
       <Text allowFontScaling={false} style={guideStyles.poseLabel}>
         {config.label}
       </Text>
 
-      {/* Center label — top center */}
+      {/* Center label - top center */}
       <Text allowFontScaling={false} style={guideStyles.centerLabel}>
         {config.centerLabel}
       </Text>
@@ -307,7 +307,7 @@ function AlignmentGuide({ pose }: { pose: PoseType }) {
       {/* Vertical center line */}
       <View style={guideStyles.verticalLine} />
 
-      {/* Top horizontal guide (eyes/ears) — about 18% from top */}
+      {/* Top horizontal guide (eyes/ears) - about 18% from top */}
       <View style={[guideStyles.horizontalLine, { top: "18%" }]} />
       <Text
         allowFontScaling={false}
@@ -316,7 +316,7 @@ function AlignmentGuide({ pose }: { pose: PoseType }) {
         {config.topGuideLabel}
       </Text>
 
-      {/* Bottom horizontal guide (hip) — about 55% from top */}
+      {/* Bottom horizontal guide (hip) - about 55% from top */}
       <View style={[guideStyles.horizontalLine, { top: "55%" }]} />
       <Text
         allowFontScaling={false}
@@ -514,7 +514,7 @@ const controlStyles = StyleSheet.create({
 });
 
 // ---------------------------------------------------------------------------
-// Pose Reference Card — shown before camera opens
+// Pose Reference Card - shown before camera opens
 // ---------------------------------------------------------------------------
 function PoseReferenceCard({
   pose,
@@ -868,7 +868,7 @@ export function PhotoCapture({
   }
 
   // =========================================================================
-  // RENDER: Preview — confirm or retake
+  // RENDER: Preview - confirm or retake
   // =========================================================================
   if (mode === "preview" && preview) {
     return (
@@ -881,7 +881,7 @@ export function PhotoCapture({
 
         <View style={styles.previewOverlay}>
           <Text allowFontScaling={false} style={styles.previewLabel}>
-            {POSE_CONFIG[pose].label} — Review
+            {POSE_CONFIG[pose].label} - Review
           </Text>
         </View>
 

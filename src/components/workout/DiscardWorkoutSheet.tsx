@@ -1,5 +1,5 @@
 /**
- * DiscardWorkoutSheet — themed confirm before discarding an in-progress
+ * DiscardWorkoutSheet - themed confirm before discarding an in-progress
  * workout. Replaces the default iOS Alert.alert that the action layer
  * used to fire from `discardWorkout()`.
  *

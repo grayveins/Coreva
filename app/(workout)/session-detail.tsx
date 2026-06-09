@@ -1,5 +1,5 @@
 /**
- * Session detail — read-only view of a past workout session.
+ * Session detail - read-only view of a past workout session.
  * Shows header (name, date, duration, exercise count) + per-exercise sets.
  *
  * Reached from: Home day-strip completed-workout card, Calendar tab
@@ -56,7 +56,7 @@ type Session = {
 function formatDuration(startIso: string, endIso: string | null): string {
   if (!endIso) return "In progress";
   const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
-  if (ms <= 0) return "—";
+  if (ms <= 0) return "-";
   const totalMin = Math.round(ms / 60000);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
@@ -217,7 +217,7 @@ export default function SessionDetailScreen() {
                           allowFontScaling={false}
                           style={[styles.setValue, { color: colors.text }]}
                         >
-                          {s.reps ?? "—"} × {s.weight_lbs != null ? `${s.weight_lbs} lbs` : "—"}
+                          {s.reps ?? "-"} × {s.weight_lbs != null ? `${s.weight_lbs} lbs` : "-"}
                           {s.rir != null ? ` · RIR ${s.rir}` : ""}
                         </Text>
                         {s.is_pr && (

@@ -123,7 +123,7 @@ export default function ProgressPhotosScreen() {
       setStage("camera");
       return;
     }
-    // Permission previously denied and the OS won't re-prompt — send to Settings.
+    // Permission previously denied and the OS won't re-prompt - send to Settings.
     if (permission && !permission.canAskAgain) {
       promptOpenSettings();
       return;
@@ -146,7 +146,7 @@ export default function ProgressPhotosScreen() {
   }, []);
 
   const handleCapture = useCallback(async () => {
-    // If counting down — tapping shutter cancels it
+    // If counting down - tapping shutter cancels it
     if (countdown !== null) {
       cancelCountdown();
       return;
@@ -288,7 +288,7 @@ export default function ProgressPhotosScreen() {
     );
   }
 
-  // Intro / Done / Uploading — all sit on the same dimmed shell
+  // Intro / Done / Uploading - all sit on the same dimmed shell
   return (
     <View style={[styles.shell, { backgroundColor: "rgba(0,0,0,0.55)" }]}>
       <Stack.Screen options={{ headerShown: false, animation: "fade" }} />

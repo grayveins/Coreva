@@ -1,7 +1,7 @@
 /**
  * Active Workout Screen
  * Thin shell composing workout components via ActiveWorkoutContext.
- * All state and logic lives in the context — this is purely UI composition.
+ * All state and logic lives in the context - this is purely UI composition.
  */
 
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
@@ -34,7 +34,7 @@ import {
 import type { PostWorkoutData } from "@/src/components/workout";
 import { ExerciseHistorySheet } from "@/src/components/workout/ExerciseHistorySheet";
 import { EndWorkoutSheet } from "@/src/components/workout/EndWorkoutSheet";
-// useActiveLimitations removed — causes PGRST errors without migrations applied
+// useActiveLimitations removed - causes PGRST errors without migrations applied
 import { useWeeklySummary } from "@/src/hooks/useWeeklySummary";
 import type { BodyRegion } from "@/src/theme";
 import { format } from "date-fns";
@@ -203,7 +203,7 @@ function ActiveWorkoutInner() {
           updateLocalPR(exercise.name, weight, reps);
 
           if (isRepPR) {
-            // Rep PR — subtler celebration via toast
+            // Rep PR - subtler celebration via toast
             setTimeout(() => {
               showToast({ message: `Rep PR! ${reps} reps @ ${weight} lbs`, type: "pr" });
             }, 300);
@@ -263,7 +263,7 @@ function ActiveWorkoutInner() {
 
   // Hardware back: minimize the workout instead of discarding it.
   // The session lives in the root provider, so dismissing the modal
-  // surfaces the persistent mini-bar — workout state is preserved.
+  // surfaces the persistent mini-bar - workout state is preserved.
   useEffect(() => {
     const handler = BackHandler.addEventListener("hardwareBackPress", () => {
       router.dismissTo("/(app)/(tabs)/workout");
@@ -309,7 +309,7 @@ function ActiveWorkoutInner() {
     setShowCheckin(true);
   }, []);
 
-  // Final finish flow — called after checkin completes
+  // Final finish flow - called after checkin completes
   const completeFinishFlow = useCallback(async () => {
     if (finishing) return; // Prevent double-tap spam
     setFinishing(true);
@@ -331,7 +331,7 @@ function ActiveWorkoutInner() {
       type: "exerciseComplete",
     });
 
-    // Navigate home — no save-as-template for coaching programs
+    // Navigate home - no save-as-template for coaching programs
     router.dismissTo("/(app)/(tabs)/workout");
   }, [finishing, actions, awardWorkoutXP, workoutStats.prs.length, endSummary.completed]);
 
@@ -426,7 +426,7 @@ function ActiveWorkoutInner() {
         saving={finishing}
         onFinish={() => {
           if (finishing) return;
-          // Always show the confirm sheet first — never silent-save / silent-discard.
+          // Always show the confirm sheet first - never silent-save / silent-discard.
           setShowEndSheet(true);
         }}
       />
@@ -541,7 +541,7 @@ function ActiveWorkoutInner() {
           const ex = state.exercises.find((e) => e.id === historyExerciseId);
           if (!ex) return;
           // Position-match: copy each previous set into the corresponding
-          // current set. Don't add or remove rows — coach's prescribed
+          // current set. Don't add or remove rows - coach's prescribed
           // structure stays intact; the user can still adjust manually.
           ex.sets.forEach((s, i) => {
             const prev = prevSets[i];
@@ -592,7 +592,7 @@ function ActiveWorkoutInner() {
         }}
       />
 
-      {/* Share card removed — react-native-view-shot not installed */}
+      {/* Share card removed - react-native-view-shot not installed */}
 
       <ToastContainer />
     </SafeAreaView>
@@ -619,7 +619,7 @@ export default function ActiveWorkoutScreen() {
   const workoutName = params.name || workoutType;
   const sourceType = (params.sourceType as "empty" | "template" | "program" | "rerun") || "empty";
 
-  // Each navigation to active.tsx is a fresh "start" intent — but we only
+  // Each navigation to active.tsx is a fresh "start" intent - but we only
   // honor it once per mount and only when no session is already active.
   // If a session is in progress (mini-bar tap, swipe-back-and-back-in),
   // we just resume it. The startedRef latch prevents re-init from a
@@ -631,7 +631,7 @@ export default function ActiveWorkoutScreen() {
       if (startedRef.current) return;
       startedRef.current = true;
       // Resolve user fresh so the session is bound to an account from
-      // moment zero — eliminates the race where the provider's getUser()
+      // moment zero - eliminates the race where the provider's getUser()
       // hadn't resolved yet when the workout starts.
       supabase.auth.getUser().then(({ data: { user } }) => {
         actions.startSession({

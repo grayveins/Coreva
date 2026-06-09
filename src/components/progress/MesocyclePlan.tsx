@@ -2,13 +2,13 @@
  * MesocyclePlan
  *
  * Visual 4-week mesocycle block showing the user where they are in their
- * training cycle. No competitor surfaces this — it gives users confidence
+ * training cycle. No competitor surfaces this - it gives users confidence
  * that their programming is periodised and purposeful.
  *
  * Phases:
  *  - Accumulation (W1-2): building volume to stimulate growth
  *  - Intensification (W3): pushing harder with increased intensity
- *  - Deload (W4): recovery week — the body grows during rest
+ *  - Deload (W4): recovery week - the body grows during rest
  */
 
 import React from "react";

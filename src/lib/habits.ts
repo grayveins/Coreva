@@ -1,5 +1,5 @@
 /**
- * Habits — coach-assigned daily/weekly habits the client checks off on Home.
+ * Habits - coach-assigned daily/weekly habits the client checks off on Home.
  *
  * Surface mirrors `coachTasks.ts`: thin async helpers that return typed rows
  * the screen can render directly. State stays in the component; we don't
@@ -123,7 +123,7 @@ export function computeCurrentStreak(
   // Walk back from today; stop on first miss.
   let streak = 0;
   const cursor = new Date(today + "T00:00:00");
-  // 365-day safety cap — we don't have logs older than the page fetched
+  // 365-day safety cap - we don't have logs older than the page fetched
   // anyway, but bound the loop just in case.
   for (let i = 0; i < 365; i++) {
     const y = cursor.getFullYear();

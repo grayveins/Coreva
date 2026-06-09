@@ -1,12 +1,12 @@
 /**
- * MfpConnectCard — instructional card teaching users how to bridge
+ * MfpConnectCard - instructional card teaching users how to bridge
  * MyFitnessPal (or any other tracker) into ADPT via Apple Health.
  *
  * MFP doesn't expose a public read API, so this is the realistic path:
  *   MFP → Apple Health → ADPT (read via HealthKit)
  *
  * The card deep-links to the Health app's Browse → Nutrition surface so
- * the user can verify data is actually flowing in. Dismissible — the
+ * the user can verify data is actually flowing in. Dismissible - the
  * dismissal is persistent so we don't nag.
  *
  * Should be rendered ONLY when HealthKit is `likely_granted`. Showing it
@@ -76,7 +76,7 @@ export const MfpConnectCard: React.FC = () => {
         and enable <Text style={{ color: colors.text }}>Calories</Text>,{" "}
         <Text style={{ color: colors.text }}>Protein</Text>,{" "}
         <Text style={{ color: colors.text }}>Carbs</Text>, and{" "}
-        <Text style={{ color: colors.text }}>Fat</Text>. ADPT reads from Apple Health automatically — no separate connection needed.
+        <Text style={{ color: colors.text }}>Fat</Text>. ADPT reads from Apple Health automatically - no separate connection needed.
       </Text>
       <Text allowFontScaling={false} style={[styles.body, { color: colors.textMuted, marginTop: 6 }]}>
         Same trick works for Cronometer, Lose It!, Carbon, and any other tracker that writes to Apple Health.

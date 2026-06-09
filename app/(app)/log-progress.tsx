@@ -1,7 +1,7 @@
 /**
- * Log progress — body stats entry (weight + body fat %).
+ * Log progress - body stats entry (weight + body fat %).
  *
- * Cal AI–style: chevron-back header, hero title with date, big card inputs
+ * Cal AI-style: chevron-back header, hero title with date, big card inputs
  * with prominent numerals, bottom-fixed primary CTA. Inter font throughout
  * to match the rest of the app.
  */
@@ -44,7 +44,7 @@ export default function LogProgress() {
 
   const weightRef = useRef<TextInput>(null);
 
-  // Autofocus the first field on mount so the keyboard is up immediately —
+  // Autofocus the first field on mount so the keyboard is up immediately -
   // user came here to log a number, not to read.
   useEffect(() => {
     const t = setTimeout(() => weightRef.current?.focus(), 240);
@@ -98,7 +98,7 @@ export default function LogProgress() {
         style={styles.flex}
         behavior={Platform.select({ ios: "padding", android: "height" })}
       >
-        {/* Header — chevron-back, no border */}
+        {/* Header - chevron-back, no border */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <Ionicons name="chevron-back" size={26} color={colors.text} />
@@ -225,7 +225,7 @@ const NumberCard = React.forwardRef<TextInput, NumberCardProps>(
             onBlur={() => setFocused(false)}
             onSubmitEditing={onSubmitEditing}
             keyboardType="decimal-pad"
-            placeholder="—"
+            placeholder="-"
             placeholderTextColor={colors.textMuted}
             style={[styles.numberInput, { color: colors.text }]}
             allowFontScaling={false}

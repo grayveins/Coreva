@@ -1,11 +1,11 @@
 /**
- * Apple HealthKit wrapper — read-only, iOS-only.
+ * Apple HealthKit wrapper - read-only, iOS-only.
  *
  * Every export early-returns null/false when:
  *   • Platform.OS !== 'ios'
  *   • the runtime is Expo Go (Nitro Modules require a custom dev client; the
  *     library throws synchronously at import in Expo Go and that crash
- *     cascades through every file that imports this one — including the
+ *     cascades through every file that imports this one - including the
  *     Home tab and Settings, which then lose their default export)
  *
  * The library is lazy-required inside each function so the static import
@@ -15,7 +15,7 @@
  * iOS auth-status caveat: HealthKit deliberately hides whether the user
  * denied READ access (`getRequestStatusForAuthorization` distinguishes only
  * `unnecessary` vs `shouldRequest`). We don't try to detect denial directly
- * here — `useHealthKit` derives a `not_asked` / `likely_granted` /
+ * here - `useHealthKit` derives a `not_asked` / `likely_granted` /
  * `likely_denied` heuristic from an AsyncStorage flag plus query results.
  */
 
@@ -29,7 +29,7 @@ const READ_TYPES = [
   // Activity
   "HKQuantityTypeIdentifierStepCount",
   "HKQuantityTypeIdentifierActiveEnergyBurned",
-  // Nutrition — surfaced by MyFitnessPal, Cronometer, Lose It!, Carbon,
+  // Nutrition - surfaced by MyFitnessPal, Cronometer, Lose It!, Carbon,
   // manual Health-app entry, etc. We aggregate all of them via cumulativeSum
   // for the day, so we don't care which app wrote the samples.
   "HKQuantityTypeIdentifierDietaryEnergyConsumed",
@@ -38,7 +38,7 @@ const READ_TYPES = [
   "HKQuantityTypeIdentifierDietaryFatTotal",
 ] as const;
 
-/** Daily intake totals — what the user ate today. Null fields mean
+/** Daily intake totals - what the user ate today. Null fields mean
  *  HealthKit had nothing for that macro (which often happens when the
  *  user's logger only writes calories). */
 export type DailyNutrition = {
@@ -50,7 +50,7 @@ export type DailyNutrition = {
 
 export type LatestSample = {
   value: number;
-  /** End date of the sample — what HealthKit treats as "when this happened". */
+  /** End date of the sample - what HealthKit treats as "when this happened". */
   date: Date;
 };
 
@@ -62,7 +62,7 @@ function canUseHealthKit(): boolean {
 
 // Lazy module loader. The library uses NitroModules which crash at import
 // time inside Expo Go (no native bridge). Resolving lazily keeps Expo Go
-// boot working — every exported wrapper falls through to null/false when
+// boot working - every exported wrapper falls through to null/false when
 // the module isn't available.
 let cachedModule:
   | typeof import("@kingstinct/react-native-healthkit")
@@ -83,7 +83,7 @@ function loadHealthKit():
 
 /**
  * Whether HealthKit is available on this device + this build.
- * Returns false in Expo Go even on iOS — the module physically can't load.
+ * Returns false in Expo Go even on iOS - the module physically can't load.
  */
 export function isHealthKitAvailable(): boolean {
   const hk = loadHealthKit();
@@ -98,7 +98,7 @@ export function isHealthKitAvailable(): boolean {
 
 /**
  * Prompt the user with the system permission sheet for our read scopes.
- * Resolves with `granted: true` only when the library reports success —
+ * Resolves with `granted: true` only when the library reports success -
  * note iOS does not actually tell us which read scopes were granted, so
  * downstream code must still tolerate empty queries.
  */
@@ -133,12 +133,12 @@ export async function getLatestBodyMassKg(): Promise<LatestSample | null> {
   }
 }
 
-/** Latest body fat percentage sample, returned as 0–100 (not 0–1). */
+/** Latest body fat percentage sample, returned as 0-100 (not 0-1). */
 export async function getLatestBodyFatPct(): Promise<LatestSample | null> {
   const hk = loadHealthKit();
   if (!hk) return null;
   try {
-    // Apple stores body fat as a fraction (0–1). Asking for unit '%' returns
+    // Apple stores body fat as a fraction (0-1). Asking for unit '%' returns
     // it scaled by 100 so callers can use the value directly.
     const sample = await hk.getMostRecentQuantitySample(
       "HKQuantityTypeIdentifierBodyFatPercentage",
@@ -204,7 +204,7 @@ export async function getActiveEnergyTodayKcal(): Promise<number | null> {
  * entry, etc.). Returns null on hard failure; individual macro fields can
  * be null when the user's logger only writes calories.
  *
- * Calorie unit: `kcal` (HealthKit's "kilocalorie") — matches the way
+ * Calorie unit: `kcal` (HealthKit's "kilocalorie") - matches the way
  * MFP / Cronometer write samples and the way our `daily_nutrition`
  * table stores `calories INTEGER`.
  */
@@ -240,7 +240,7 @@ export async function getNutritionToday(): Promise<DailyNutrition | null> {
     ]);
 
     // Treat the whole result as null only when EVERY field came back null
-    // — then we know the user has no nutrition data flowing yet, vs the
+    // - then we know the user has no nutrition data flowing yet, vs the
     // partial-data case where calories exist but macros don't.
     if (calories == null && protein == null && carbs == null && fat == null) {
       return null;

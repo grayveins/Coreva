@@ -1,5 +1,5 @@
 /**
- * EndWorkoutSheet — confirm-on-end bottom sheet for active workouts.
+ * EndWorkoutSheet - confirm-on-end bottom sheet for active workouts.
  *
  * Two modes, set by the caller:
  *   - normal  → user logged ≥1 set; show big X / Y hero + Save & Finish.
@@ -54,7 +54,7 @@ export const EndWorkoutSheet: React.FC<Props> = ({
                 allowFontScaling={false}
                 style={[styles.emptyBody, { color: colors.textMuted }]}
               >
-                No sets logged yet — nothing to save.
+                No sets logged yet - nothing to save.
               </Text>
             ) : (
               <View style={styles.heroBlock}>

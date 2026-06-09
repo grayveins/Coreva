@@ -73,7 +73,7 @@ export default function CalendarScreen() {
     const monthStartYmd = format(startOfMonth(currentMonth), "yyyy-MM-dd");
     const monthEndYmd = format(endOfMonth(currentMonth), "yyyy-MM-dd");
 
-    // Habit logs need assignment ids — fetch assignments first, then logs.
+    // Habit logs need assignment ids - fetch assignments first, then logs.
     // Other queries are independent so they go in parallel.
     const [sessionRes, workoutRes, asgn, allKeys] = await Promise.all([
       supabase
@@ -180,7 +180,7 @@ export default function CalendarScreen() {
 
   // Habits visible on selected day: only show habits that existed on or before
   // that date. Don't let users log completion for a habit that wasn't assigned
-  // yet — would be nonsense data.
+  // yet - would be nonsense data.
   const dayHabits = useMemo(() => {
     const endOfDayMs = startOfDay(selectedDate).getTime() + 24 * 60 * 60 * 1000 - 1;
     return habits.filter((h) => new Date(h.created_at).getTime() <= endOfDayMs);
@@ -287,7 +287,7 @@ export default function CalendarScreen() {
             <Ionicons name="person-outline" size={18} color={colors.text} />
             <View style={styles.eventInfo}>
               <Text allowFontScaling={false} style={[styles.eventTitle, { color: colors.text }]}>
-                Session — {s.duration_minutes} min
+                Session - {s.duration_minutes} min
               </Text>
               {s.location && (
                 <Text allowFontScaling={false} style={[styles.eventMeta, { color: colors.textMuted }]}>
@@ -326,7 +326,7 @@ export default function CalendarScreen() {
           </Pressable>
         ))}
 
-        {/* Habits — read-only audit view. Toggling lives on the Home
+        {/* Habits - read-only audit view. Toggling lives on the Home
             day-strip; this screen is for at-a-glance review. */}
         {dayHabits.length > 0 && (
           <View style={styles.habitGroup}>

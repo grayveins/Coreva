@@ -1,5 +1,5 @@
 /**
- * StrengthScoreCard — Premium "ADPT Score" display
+ * StrengthScoreCard - Premium "ADPT Score" display
  *
  * Solo Leveling / Valorant inspired design:
  * - Hero section: Gauge + large score + rank title + percentile
@@ -123,7 +123,7 @@ function ScoreGauge({ score, maxScore = 999 }: { score: number; maxScore?: numbe
         />
       )}
 
-      {/* Indicator dot — larger, more prominent */}
+      {/* Indicator dot - larger, more prominent */}
       {score > 0 && (
         <>
           <Circle cx={dot.x} cy={dot.y} r={7} fill="#FFD700" opacity={0.3} />
@@ -219,7 +219,7 @@ export function StrengthScoreCard({ score, onLiftPress, onMilestonesPress }: Str
 
       {/* ══════════════ HERO: Gauge + Score + Rank ══════════════ */}
       <View style={[styles.heroCard, { backgroundColor: colors.card }]}>
-        {/* Share icon — top right */}
+        {/* Share icon - top right */}
         <Pressable
           onPress={handleShare}
           style={({ pressed }) => [
@@ -243,7 +243,7 @@ export function StrengthScoreCard({ score, onLiftPress, onMilestonesPress }: Str
           </View>
         </View>
 
-        {/* Rank title — the Solo Leveling flex */}
+        {/* Rank title - the Solo Leveling flex */}
         <Text allowFontScaling={false} style={[styles.rankTitle, { color: rankColor }]}>
           {rankTitle}
         </Text>
@@ -399,7 +399,7 @@ export function StrengthScoreCard({ score, onLiftPress, onMilestonesPress }: Str
 
       {score.liftsUsed < 4 && (
         <Text allowFontScaling={false} style={[styles.liftsHint, { color: colors.textMuted }]}>
-          {4 - score.liftsUsed} lift{4 - score.liftsUsed > 1 ? "s" : ""} missing — score is estimated
+          {4 - score.liftsUsed} lift{4 - score.liftsUsed > 1 ? "s" : ""} missing - score is estimated
         </Text>
       )}
     </View>

@@ -249,7 +249,7 @@ export const PreWorkoutCheckin: React.FC<PreWorkoutCheckinProps> = ({
                   </View>
                   
                   <Text allowFontScaling={false} style={[styles.adaptationBody, { color: colors.textSecondary }]}>
-                    We&apos;ll modify exercises to work around your {painAreas.map(area => bodyRegions[area].label.toLowerCase()).join(" and ")}. Your progress won&apos;t be affected — we&apos;re optimizing for long-term results.
+                    We&apos;ll modify exercises to work around your {painAreas.map(area => bodyRegions[area].label.toLowerCase()).join(" and ")}. Your progress won&apos;t be affected - we&apos;re optimizing for long-term results.
                   </Text>
 
                   <View style={styles.adaptationBullets}>

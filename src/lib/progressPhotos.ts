@@ -1,5 +1,5 @@
 /**
- * Progress photos — upload, list, delete helpers.
+ * Progress photos - upload, list, delete helpers.
  * Photos live in the `progress-photos` storage bucket under {user_id}/...
  * Metadata in the public.progress_photos table.
  */

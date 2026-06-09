@@ -82,7 +82,7 @@ export default function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [allWorkouts, setAllWorkouts] = useState<any[]>([]);
   // All phase_workouts in the active program, keyed by id. Used to look up
-  // a workout that scheduled_workouts references — possibly from a phase
+  // a workout that scheduled_workouts references - possibly from a phase
   // other than the currently-active one.
   const [workoutsById, setWorkoutsById] = useState<Map<string, WorkoutLite>>(
     () => new Map(),
@@ -126,7 +126,7 @@ export default function HomeScreen() {
     if (!user) { router.replace("/sign-in"); return; }
     setUserId(user.id);
 
-    // The three queries below are independent — fire them in parallel
+    // The three queries below are independent - fire them in parallel
     // instead of awaiting each one in series. Cuts perceived load time
     // on Home from ~3 round-trips to 1.
     const cutoff = subDays(new Date(), 21).toISOString();
@@ -171,7 +171,7 @@ export default function HomeScreen() {
       setAllWorkouts(activePhase?.phase_workouts ?? []);
 
       // workoutsById spans every phase in the program, not just the active
-      // one — so a coach scheduling a workout from phase 2 while phase 1 is
+      // one - so a coach scheduling a workout from phase 2 while phase 1 is
       // still active still resolves correctly.
       const byId = new Map<string, WorkoutLite>();
       for (const ph of sortedPhases) {
@@ -298,14 +298,14 @@ export default function HomeScreen() {
     };
   }, [userId]);
 
-  // Selected-day coach tasks — derived from the window; rendering and the
+  // Selected-day coach tasks - derived from the window; rendering and the
   // optimistic toggle use this.
   const coachTasks = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     return coachTasksWindow.filter((t) => t.scheduled_for === dateStr);
   }, [coachTasksWindow, selectedDate]);
 
-  // Habits — only relevant for "today." Future days don't get a checkbox
+  // Habits - only relevant for "today." Future days don't get a checkbox
   // (you can't pre-complete tomorrow's water intake), past days are
   // read-only history. Keeps the affordance unambiguous.
   //
@@ -462,7 +462,7 @@ export default function HomeScreen() {
   }, [completedSessions]);
 
   const greeting = `${getGreeting()}, ${profileName}`;
-  const weightLbs = bodyStats?.weight_kg ? (bodyStats.weight_kg * 2.205).toFixed(1) : "—";
+  const weightLbs = bodyStats?.weight_kg ? (bodyStats.weight_kg * 2.205).toFixed(1) : "-";
 
   const workoutsThisWeek = useMemo(() => {
     const start = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -490,7 +490,7 @@ export default function HomeScreen() {
 
   // Set of YYYY-MM-DD strings whose Home slate is fully completed.
   // Recomputes on any state change feeding into "done-ness". Days with
-  // zero applicable items are NOT included — perfection requires at
+  // zero applicable items are NOT included - perfection requires at
   // least one item to have been on the slate.
   const perfectDates = useMemo(() => {
     const result = new Set<string>();
@@ -524,7 +524,7 @@ export default function HomeScreen() {
         if (!macroFlagDates.has(ymd)) allDone = false;
       }
 
-      // Habits — only those that existed on or before EOD of `day`.
+      // Habits - only those that existed on or before EOD of `day`.
       const endOfDayMs = startOfDay(day).getTime() + 24 * 60 * 60 * 1000 - 1;
       for (const h of habits) {
         if (new Date(h.created_at).getTime() > endOfDayMs) continue;
@@ -719,7 +719,7 @@ export default function HomeScreen() {
             </Pressable>
           )}
 
-          {/* Rest day — coach explicitly marked this date as rest */}
+          {/* Rest day - coach explicitly marked this date as rest */}
           {selectedDayIsRest && !selectedDayCompleted && (
             <View style={[styles.taskCard, { backgroundColor: colors.bgSecondary }]}>
               <View style={[styles.taskDot, { borderColor: colors.textMuted, backgroundColor: "transparent" }]} />
@@ -759,7 +759,7 @@ export default function HomeScreen() {
             </Pressable>
           )}
 
-          {/* Nutrition row — toggle like a habit; backfill works for past +
+          {/* Nutrition row - toggle like a habit; backfill works for past +
               today, future is read-only (you can't "have hit" tomorrow). */}
           {macros && !coachTasks.some((t) => t.task_type === "macros") && (
             <Pressable
@@ -841,8 +841,8 @@ export default function HomeScreen() {
             );
           })}
 
-          {/* Coach-set habits — visible on every day with that day's log
-              state. Only checkable on "today" — past/future days are
+          {/* Coach-set habits - visible on every day with that day's log
+              state. Only checkable on "today" - past/future days are
               read-only since the act of completing them happened (or
               didn't) at that point in time. */}
           {habits.map((habit) => {
@@ -868,10 +868,10 @@ export default function HomeScreen() {
           })}
         </View>
 
-        {/* Apple Health prompt — only when HealthKit is supported AND
+        {/* Apple Health prompt - only when HealthKit is supported AND
             we haven't asked yet (or the user denied). When the runtime
             is "unsupported" (Expo Go, Android, missing native module)
-            we render nothing — the previous version showed a Connect
+            we render nothing - the previous version showed a Connect
             CTA in builds where it'd silently fail. */}
         {Platform.OS === "ios" &&
           (hkPermissionState === "not_asked" || hkPermissionState === "likely_denied") && (
@@ -883,13 +883,13 @@ export default function HomeScreen() {
             </View>
           )}
 
-        {/* Activity card — steps + active energy, hidden when no data. */}
+        {/* Activity card - steps + active energy, hidden when no data. */}
         {hkPermissionState === "likely_granted" &&
           (hkSteps != null || hkActiveEnergy != null) && (
             <View style={[styles.activityCard, { backgroundColor: colors.bgSecondary }]}>
               <View style={styles.activityCol}>
                 <Text allowFontScaling={false} style={[styles.activityValue, { color: colors.text }]}>
-                  {hkSteps != null ? hkSteps.toLocaleString() : "—"}
+                  {hkSteps != null ? hkSteps.toLocaleString() : "-"}
                 </Text>
                 <Text allowFontScaling={false} style={[styles.activityLabel, { color: colors.textMuted }]}>
                   STEPS
@@ -898,7 +898,7 @@ export default function HomeScreen() {
               <View style={[styles.activityDivider, { backgroundColor: colors.border }]} />
               <View style={styles.activityCol}>
                 <Text allowFontScaling={false} style={[styles.activityValue, { color: colors.text }]}>
-                  {hkActiveEnergy != null ? hkActiveEnergy.toLocaleString() : "—"}
+                  {hkActiveEnergy != null ? hkActiveEnergy.toLocaleString() : "-"}
                 </Text>
                 <Text allowFontScaling={false} style={[styles.activityLabel, { color: colors.textMuted }]}>
                   ACTIVE KCAL
@@ -922,7 +922,7 @@ export default function HomeScreen() {
           <MetricCard
             title="Body Fat"
             subtitle={bodyStats?.date ? format(new Date(bodyStats.date), "d MMM yyyy") : "No data"}
-            value={bodyStats?.body_fat_pct != null ? `${bodyStats.body_fat_pct}` : "—"}
+            value={bodyStats?.body_fat_pct != null ? `${bodyStats.body_fat_pct}` : "-"}
             unit="%"
             onAdd={() => router.push({ pathname: "/(app)/log-progress", params: { date: format(selectedDate, "yyyy-MM-dd") } } as any)}
           />
@@ -946,13 +946,13 @@ export default function HomeScreen() {
             <MetricCard
               title="Steps Today"
               subtitle="From Apple Health"
-              value={hkSteps != null ? hkSteps.toLocaleString() : "—"}
+              value={hkSteps != null ? hkSteps.toLocaleString() : "-"}
               unit="steps"
             />
             <MetricCard
               title="Active Energy"
               subtitle="Today"
-              value={hkActiveEnergyEnergy != null ? `${hkActiveEnergyEnergy}` : "—"}
+              value={hkActiveEnergyEnergy != null ? `${hkActiveEnergyEnergy}` : "-"}
               unit="kcal"
             />
           </View>
@@ -1103,7 +1103,7 @@ const styles = StyleSheet.create({
   dayNum: { fontSize: 16, fontWeight: "600" },
   dayLabel: { fontSize: 11, marginTop: 1 },
   dot: { width: 4, height: 4, borderRadius: 2, marginTop: 2, position: "absolute", bottom: 4 },
-  // Activity card — steps + active energy under the day strip when
+  // Activity card - steps + active energy under the day strip when
   // HealthKit is connected and has data for today.
   activityCard: {
     flexDirection: "row",

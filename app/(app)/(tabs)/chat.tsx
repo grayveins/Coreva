@@ -1,5 +1,5 @@
 /**
- * Coach messaging — client-side thread with their assigned coach.
+ * Coach messaging - client-side thread with their assigned coach.
  * Single thread (clients have one coach). Realtime via Supabase channel.
  */
 

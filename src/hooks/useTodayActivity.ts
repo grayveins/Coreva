@@ -1,5 +1,5 @@
 /**
- * Today's steps + active energy — reads `daily_activity` from Supabase.
+ * Today's steps + active energy - reads `daily_activity` from Supabase.
  * Companion to `useTodayNutrition`. Fed by `useHealthKit` foreground sync.
  */
 

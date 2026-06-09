@@ -1,5 +1,5 @@
 /**
- * Workout History — minimalist list of past sessions.
+ * Workout History - minimalist list of past sessions.
  *
  * Cal AI / Linear-style: oversized title, no boxed cards, hairline rows,
  * monochrome only. Each row is a single tap target that routes to the
@@ -192,7 +192,7 @@ export default function WorkoutHistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Minimal header — no bottom border, just back + title */}
+      {/* Minimal header - no bottom border, just back + title */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
@@ -231,7 +231,7 @@ export default function WorkoutHistoryScreen() {
               {workouts.length} workout{workouts.length === 1 ? "" : "s"}
             </Text>
 
-            {/* Free-tier banner — hairline, no fill */}
+            {/* Free-tier banner - hairline, no fill */}
             {!hasFullHistory && (
               <Pressable
                 onPress={() => setShowUpgrade(true)}

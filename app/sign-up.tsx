@@ -1,5 +1,5 @@
 /**
- * Sign Up Screen — Clean, animated
+ * Sign Up Screen - Clean, animated
  */
 
 import { useMemo, useState } from "react";

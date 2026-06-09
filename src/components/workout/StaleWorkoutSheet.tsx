@@ -1,5 +1,5 @@
 /**
- * StaleWorkoutSheet — shown on app launch when a persisted workout draft is
+ * StaleWorkoutSheet - shown on app launch when a persisted workout draft is
  * "stale": left running for hours, or started on an earlier calendar day.
  *
  * Leaving a workout running forever is counterintuitive, so instead of

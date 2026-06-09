@@ -156,7 +156,7 @@ export const MuscleMap: React.FC<MuscleMapProps> = ({ data }) => {
         {renderBody("back")}
       </View>
 
-      {/* Legend — compact horizontal bars */}
+      {/* Legend - compact horizontal bars */}
       {legend.length > 0 && (
         <View style={styles.legend}>
           {legend.map((item) => (

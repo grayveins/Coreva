@@ -1,5 +1,5 @@
 /**
- * Tab Layout — Home, Calendar, Workouts, Meals, Chat.
+ * Tab Layout - Home, Calendar, Workouts, Meals, Chat.
  */
 
 import React, { useEffect } from "react";
@@ -86,7 +86,7 @@ export default function TabLayout() {
   const { unreadCount } = useUnreadMessages();
   // Tab bar configuration - use dynamic safe area
   // On home-indicator phones, insets.bottom is ~34, giving an ~83px bar.
-  // On iPhone SE/SE2/SE3 (no home indicator), insets.bottom is 0 — without
+  // On iPhone SE/SE2/SE3 (no home indicator), insets.bottom is 0 - without
   // the floor below, the bar collapses to 49px and the negative
   // paddingBottom math clips labels off-screen.
   const tabBarHeight = Platform.OS === "ios" ? Math.max(49 + insets.bottom, 64) : 60;
@@ -198,7 +198,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Hidden legacy tabs — Expo Router requires the files to exist */}
+      {/* Hidden legacy tabs - Expo Router requires the files to exist */}
       <Tabs.Screen name="progress" options={{ href: null }} />
       <Tabs.Screen name="social" options={{ href: null }} />
       <Tabs.Screen name="checkin" options={{ href: null }} />

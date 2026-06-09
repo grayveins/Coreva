@@ -1,5 +1,5 @@
 /**
- * useStreak — consistency streak.
+ * useStreak - consistency streak.
  *
  * A day counts only when every required habit is logged AND the scheduled
  * workout (if any) is completed. Rest days waive the workout requirement;

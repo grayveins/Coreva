@@ -13,10 +13,10 @@
  * persists in AsyncStorage and rehydrates) can never save a multi-day
  * length. When the caller knows when the last set was logged
  * (`lastActivityAt`), we end the session a short grace period after that
- * instead of at `now` — giving accurate durations for abandoned sessions.
+ * instead of at `now` - giving accurate durations for abandoned sessions.
  * A hard ceiling (`MAX_SESSION_MS`) is the final backstop.
  *
- * Pure function — accepts `now` so we can test it deterministically.
+ * Pure function - accepts `now` so we can test it deterministically.
  */
 
 /** Hard ceiling for a single session. Real workouts rarely exceed this;

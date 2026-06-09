@@ -3,7 +3,7 @@
  *
  * Gives new users full Pro access for 7 days after account creation,
  * without requiring payment. After the trial expires, features lock
- * and the user sees what they're losing — driving conversion.
+ * and the user sees what they're losing - driving conversion.
  *
  * This is a "reverse trial" (give value first, then take it away)
  * as opposed to a traditional trial (ask for card upfront).

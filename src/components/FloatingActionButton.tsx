@@ -24,7 +24,7 @@ export function FloatingActionButton() {
   const workoutCtx = useActiveWorkoutSafe();
   const hideFab =
     segments.some((s) => s === "chat" || s === "(workout)" || s === "active") ||
-    // Hide while a workout is in progress — the mini-bar owns the bottom
+    // Hide while a workout is in progress - the mini-bar owns the bottom
     // affordance and "start a new workout" from the FAB would be misleading.
     !!workoutCtx?.state.isActive;
   if (hideFab) return null;

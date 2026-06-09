@@ -5,10 +5,10 @@
  * exercise name in `(workout)/active.tsx` to open it.
  *
  * Layout (top → bottom):
- *   1. "Personal best to beat" — Est. 1RM / Max weight / Best volume.
- *   2. Trend — a clean bar sparkline of the selected metric over time.
+ *   1. "Personal best to beat" - Est. 1RM / Max weight / Best volume.
+ *   2. Trend - a clean bar sparkline of the selected metric over time.
  *   3. Chronological session list.
- *   4. Sticky CTA — "Use Last Workout" copies the last session's sets.
+ *   4. Sticky CTA - "Use Last Workout" copies the last session's sets.
  */
 
 import React, { useMemo, useState } from "react";
@@ -187,11 +187,11 @@ export function ExerciseHistorySheet({
                 Personal best to beat
               </Text>
               <View style={[styles.pbRow, { backgroundColor: colors.bgSecondary }]}>
-                <PBStat icon="trophy-outline" value={pbs.e1rm ? `${pbs.e1rm}` : "—"} unit="lbs" label="Est. 1RM" colors={colors} />
+                <PBStat icon="trophy-outline" value={pbs.e1rm ? `${pbs.e1rm}` : "-"} unit="lbs" label="Est. 1RM" colors={colors} />
                 <View style={[styles.pbDivider, { backgroundColor: colors.border }]} />
-                <PBStat icon="barbell-outline" value={pbs.heaviest ? `${pbs.heaviest}` : "—"} unit="lbs" label="Max weight" colors={colors} />
+                <PBStat icon="barbell-outline" value={pbs.heaviest ? `${pbs.heaviest}` : "-"} unit="lbs" label="Max weight" colors={colors} />
                 <View style={[styles.pbDivider, { backgroundColor: colors.border }]} />
-                <PBStat icon="layers-outline" value={pbs.vol ? `${pbs.vol}` : "—"} unit="lbs" label="Best volume" colors={colors} />
+                <PBStat icon="layers-outline" value={pbs.vol ? `${pbs.vol}` : "-"} unit="lbs" label="Best volume" colors={colors} />
               </View>
 
               {/* Trend */}
@@ -272,7 +272,7 @@ function PBStat({ icon, value, unit, label, colors }: {
       <Ionicons name={icon} size={16} color={colors.textMuted} />
       <View style={styles.pbValueRow}>
         <Text allowFontScaling={false} style={[styles.pbValue, { color: colors.text }]}>{value}</Text>
-        {value !== "—" && (
+        {value !== "-" && (
           <Text allowFontScaling={false} style={[styles.pbUnit, { color: colors.textMuted }]}>{unit}</Text>
         )}
       </View>
