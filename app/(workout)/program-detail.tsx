@@ -99,13 +99,13 @@ export default function ProgramDetailScreen() {
             {workoutName}
           </Text>
 
-          {/* Stats strip */}
+          {/* Stats strip — icon-led, est. time first (Trainerize-style) */}
           <View style={styles.statsRow}>
-            <Stat value={String(exercises.length)} label="Exercises" colors={colors} />
+            <Stat icon="time-outline" value={`${estMinutes}`} label="Est. min" colors={colors} />
             <View style={styles.statDivider} />
-            <Stat value={String(totalSets)} label="Sets" colors={colors} />
+            <Stat icon="barbell-outline" value={String(exercises.length)} label="Exercises" colors={colors} />
             <View style={styles.statDivider} />
-            <Stat value={`~${estMinutes}`} label="Min" colors={colors} />
+            <Stat icon="layers-outline" value={String(totalSets)} label="Sets" colors={colors} />
           </View>
 
           {/* Targets */}
@@ -175,13 +175,19 @@ export default function ProgramDetailScreen() {
   );
 }
 
-function Stat({ value, label, colors }: { value: string; label: string; colors: ReturnType<typeof useTheme>["colors"] }) {
+function Stat({ icon, value, label, colors }: {
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+  label: string;
+  colors: ReturnType<typeof useTheme>["colors"];
+}) {
   return (
-    <View style={{ flex: 1, alignItems: "center" }}>
-      <Text allowFontScaling={false} style={{ fontSize: 24, fontFamily: "Inter_700Bold", color: colors.text, letterSpacing: -0.5 }}>
+    <View style={{ flex: 1, alignItems: "center", gap: 4 }}>
+      <Ionicons name={icon} size={18} color={colors.textMuted} />
+      <Text allowFontScaling={false} style={{ fontSize: 22, fontFamily: "Inter_700Bold", color: colors.text, letterSpacing: -0.5 }}>
         {value}
       </Text>
-      <Text allowFontScaling={false} style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.textMuted, letterSpacing: 0.6, textTransform: "uppercase", marginTop: 2 }}>
+      <Text allowFontScaling={false} style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.textMuted, letterSpacing: 0.6, textTransform: "uppercase" }}>
         {label}
       </Text>
     </View>
