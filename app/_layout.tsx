@@ -1,16 +1,52 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as SplashScreen from "expo-splash-screen";
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
 
 import { hasSupabaseConfig, supabaseConfigError } from "@/lib/supabase";
 import { ThemeProvider } from "@/src/context/ThemeContext";
 import { ErrorBoundary } from "@/src/components/ErrorBoundary";
 import { ActiveWorkoutProvider } from "@/src/context/ActiveWorkoutContext";
 
+// Hold the native splash until our fonts resolve so text never flashes in
+// the fallback system font before Inter is ready.
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
+  // These four weights are the only Inter weights referenced across the app.
+  // Until this was wired up they were declared in styles but never loaded,
+  // so every `fontFamily: "Inter_*"` silently fell back to the system font
+  // at regular weight.
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Keep the splash up until fonts resolve (or fail) - rendering early would
+  // show the unstyled fallback for a frame.
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   if (!hasSupabaseConfig) {
     return (
       <SafeAreaView style={styles.configSafe}>
