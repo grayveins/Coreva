@@ -48,6 +48,7 @@ function CustomDrawerContent(props: any) {
   const { colors } = useTheme();
   const [profileName, setProfileName] = useState<string>("User");
   const [email, setEmail] = useState<string>("");
+  const [isCoach, setIsCoach] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Get app version
@@ -72,7 +73,19 @@ function CustomDrawerContent(props: any) {
         .eq("id", user.id)
         .single();
 
-      if (!profileError && profile?.first_name) setProfileName(profile.first_name);
+      // Generated Database types currently resolve this row to `never`; read
+      // columns through a narrow cast (consistent with the rest of the app).
+      const prof = profile as { first_name?: string } | null;
+      if (!profileError && prof?.first_name) setProfileName(prof.first_name);
+
+      // Coach status comes from the authoritative `coaches` table, not
+      // profiles.role (a seed-created coaches row never flips profiles.role).
+      const { data: coachRow } = await supabase
+        .from("coaches")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (coachRow) setIsCoach(true);
 
       setLoading(false);
     };
@@ -90,6 +103,11 @@ function CustomDrawerContent(props: any) {
   const onSettings = () => {
     closeDrawer();
     router.push("/settings");
+  };
+
+  const onCoachDashboard = () => {
+    closeDrawer();
+    router.push("/(coach)" as any);
   };
 
   const onHelp = () => {
@@ -148,6 +166,9 @@ function CustomDrawerContent(props: any) {
 
       {/* Menu Items */}
       <View style={styles.menuSection}>
+        {isCoach && (
+          <MenuItem icon="people-outline" label="Coach Dashboard" onPress={onCoachDashboard} />
+        )}
         <MenuItem icon="chatbubble-outline" label="Messages" onPress={onMessages} />
         <MenuItem icon="settings-outline" label="Settings" onPress={onSettings} />
         <MenuItem icon="help-circle-outline" label="Help & Support" onPress={onHelp} />
