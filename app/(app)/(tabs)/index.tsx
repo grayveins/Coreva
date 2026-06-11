@@ -24,7 +24,7 @@ import { useNavigation } from "@react-navigation/native";
 
 import { useTheme } from "@/src/context/ThemeContext";
 import { supabase } from "@/lib/supabase";
-import { spacing } from "@/src/theme";
+import { spacing, radius } from "@/src/theme";
 import { useStreak } from "@/src/hooks/useStreak";
 import { useBodyStats } from "@/src/hooks/useBodyStats";
 import { useClientMacros } from "@/src/hooks/useClientMacros";
@@ -968,17 +968,17 @@ function HomeBodySkeleton({ colors }: { colors: any }) {
   return (
     <View style={{ gap: spacing.md, marginTop: spacing.md }}>
       <View style={{ height: 14, width: "30%", backgroundColor: colors.border, borderRadius: 4, opacity: 0.4 }} />
-      <View style={{ height: 64, backgroundColor: colors.bgSecondary, borderRadius: 14 }} />
-      <View style={{ height: 64, backgroundColor: colors.bgSecondary, borderRadius: 14 }} />
-      <View style={{ height: 64, backgroundColor: colors.bgSecondary, borderRadius: 14 }} />
+      <View style={{ height: 64, backgroundColor: colors.bgSecondary, borderRadius: radius.lg }} />
+      <View style={{ height: 64, backgroundColor: colors.bgSecondary, borderRadius: radius.lg }} />
+      <View style={{ height: 64, backgroundColor: colors.bgSecondary, borderRadius: radius.lg }} />
       <View style={{ height: 14, width: "30%", backgroundColor: colors.border, borderRadius: 4, opacity: 0.4, marginTop: spacing.lg }} />
       <View style={{ flexDirection: "row", gap: spacing.md }}>
-        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: 14 }} />
-        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: 14 }} />
+        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: radius.lg }} />
+        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: radius.lg }} />
       </View>
       <View style={{ flexDirection: "row", gap: spacing.md }}>
-        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: 14 }} />
-        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: 14 }} />
+        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: radius.lg }} />
+        <View style={{ flex: 1, height: 92, backgroundColor: colors.bgSecondary, borderRadius: radius.lg }} />
       </View>
     </View>
   );
@@ -1095,7 +1095,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 52,
     height: 62,
-    borderRadius: 14,
+    borderRadius: radius.lg,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 6,
@@ -1107,7 +1107,7 @@ const styles = StyleSheet.create({
   // HealthKit is connected and has data for today.
   activityCard: {
     flexDirection: "row",
-    borderRadius: 14,
+    borderRadius: radius.lg,
     paddingVertical: 16,
     marginTop: spacing.lg,
   },
@@ -1144,7 +1144,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: spacing.base,
-    borderRadius: 14,
+    borderRadius: radius.lg,
     gap: spacing.md,
   },
   taskDot: {
