@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/src/context/ThemeContext";
-import { spacing } from "@/src/theme";
+import { spacing, radius } from "@/src/theme";
 import { hapticPress, hapticSuccess } from "@/src/animations/feedback/haptics";
 
 type Props = {
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: spacing.base,
-    borderRadius: 14,
+    borderRadius: radius.lg,
     gap: spacing.md,
   },
   dot: {

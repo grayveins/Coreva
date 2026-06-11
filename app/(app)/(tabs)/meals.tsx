@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     gap: 0,
@@ -486,22 +486,22 @@ const styles = StyleSheet.create({
   // Coach notes
   notesCard: {
     padding: spacing.base,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     marginBottom: spacing.xl,
     gap: 6,
   },
   notesLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   notesBody: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
 
   // Meal plans
   section: { marginTop: spacing.sm },
   sectionTitle: {
-    fontSize: 17,
-    fontFamily: "Inter_600SemiBold",
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
     marginBottom: spacing.sm,
   },
   planList: {},
